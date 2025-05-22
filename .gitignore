@@ -1,0 +1,11 @@
+*.log
+*.ipynb
+*.ipynb_checkpoints
+*.env
+**/__pycache__
+**/.DS_Store
+results/
+dict_hpo/
+dict_medic/
+ontology/
+data/
