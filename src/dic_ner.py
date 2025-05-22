@@ -142,18 +142,3 @@ class dic_ont():
                 fout.write('\n')
         
         return fout.getvalue()
-     
-
-if __name__=='__main__':
-    
-    ontfiles={'dic_file':'//panfs/pan1/bionlp/lulab/luoling/HPO_project/bioTag/dict/hpo_noabb_lemma.dic',
-              'word_hpo_file':'//panfs/pan1/bionlp/lulab/luoling/HPO_project/bioTag/dict/word_hpoid_map.json',
-              'hpo_word_file':'//panfs/pan1/bionlp/lulab/luoling/HPO_project/bioTag/dict/hpoid_word_map.json'}
-    biotag_dic=dic_ont(ontfiles)
-    text='Nevoid basal cell carcinoma syndrome (NBCCS) is a hereditary condition transmitted as an autosomal dominant trait with complete penetrance and variable expressivity. The syndrome is characterised by numerous basal cell carcinomas (BCCs), odontogenic keratocysts of the jaws, palmar and/or plantar pits, skeletal abnormalities and intracranial calcifications. In this paper, the clinical features of 37 Italian patients are reviewed. Jaw cysts and calcification of falx cerebri were the most frequently observed anomalies, followed by BCCs and palmar/plantar pits. Similar to the case of African Americans, the relatively low frequency of BCCs in the Italian population is probably due to protective skin pigmentation. A future search based on mutation screening might establish a possible genotype phenotype correlation in Italian patients.'
-    ssplit_token=ssplit_token_pos_lemma(text)
-#    print(ssplit_token)
-    dic_result=biotag_dic.matching(ssplit_token)
-    print(dic_result)
-
-    
