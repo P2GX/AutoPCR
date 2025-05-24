@@ -1,17 +1,11 @@
-from openai import OpenAI
 import json
 import subprocess
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")
-CLIENT = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
-def prompt(pr, model):
+def prompt(pr, model, client):
     responses = {}
     if model == 'gpt':
-        responses = prompt_gpt(pr)
+        responses = prompt_gpt(pr, client)
     return responses
 
 
@@ -27,10 +21,10 @@ def prompt_batch(pr_batch_path, model):
     return responses
 
 
-def prompt_gpt(pr, model='gpt-4o-mini'):
+def prompt_gpt(pr, client, model='gpt-4o-mini'):
     responses = {}
     for i in pr:
-        response = CLIENT.chat.completions.create(
+        response = client.chat.completions.create(
                 model=model,
                 messages=[
                     {'role': 'system',

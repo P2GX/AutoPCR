@@ -13,9 +13,9 @@ dependencies:
   - blas=1.0=mkl
   - brotli-python=1.1.0=py310hf71b8c6_2
   - bzip2=1.0.8=h4bc722e_7
-  - ca-certificates=2025.1.31=hbcca054_0
+  - ca-certificates=2025.4.26=hbd8a1cb_0
   - catalogue=2.0.10=py310hff52083_1
-  - certifi=2025.1.31=pyhd8ed1ab_0
+  - certifi=2025.4.26=pyhd8ed1ab_0
   - cffi=1.17.1=py310h8deb56e_0
   - charset-normalizer=3.4.1=pyhd8ed1ab_0
   - click=8.1.8=pyh707e725_0
@@ -110,7 +110,7 @@ dependencies:
   - ncurses=6.5=h2d0b736_3
   - nest-asyncio=1.6.0=pyhd8ed1ab_1
   - openai=1.68.2=pyhd8ed1ab_0
-  - openssl=3.5.0=h7b32b05_0
+  - openssl=3.5.0=h7b32b05_1
   - packaging=24.2=pyhd8ed1ab_2
   - pandas=2.2.3=py310h5eaa309_3
   - parso=0.8.4=pyhd8ed1ab_1
@@ -130,6 +130,7 @@ dependencies:
   - pysocks=1.7.1=pyha55dd90_7
   - python=3.10.14=hd12c33a_0_cpython
   - python-dateutil=2.9.0.post0=pyhff2d567_1
+  - python-dotenv=1.1.0=pyh29332c3_1
   - python-tzdata=2025.2=pyhd8ed1ab_0
   - python_abi=3.10=5_cp310
   - pytorch=2.5.1=py3.10_cuda11.8_cudnn9.1.0_0

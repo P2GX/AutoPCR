@@ -11,6 +11,7 @@ import nltk
 from nn_model2 import bioTag_SapBERT
 from evaluate import GSCplus_corpus_hponew as GSCplus_corpus
 from evaluate import JAX_corpus_hponew as JAX_corpus
+from dotenv import load_dotenv
 
 '''
 config = tf.ConfigProto()  
@@ -55,11 +56,13 @@ def run_gsc_test(files,biotag_dic,nn_model,ts,batch=False):
 if __name__=="__main__":
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ontology', '-onto', choices=['HPO', 'MEDIC'], default='HPO')
-    parser.add_argument('--corpus', '-c', choices=['BIOC-GS', 'GSC-2024', 'ID-68', 'NCBI'], default='GSC-2024')
-    parser.add_argument('--output', '-o', help="the output prediction file", default='../results/GSC-2024.tsv')
-    parser.add_argument('--ts', help="threshold for model", type=float, default=0.95)
-    parser.add_argument('--llm', type=str, default='')
+    parser.add_argument('--ontology', '-onto', choices=['HPO', 'MEDIC'], type=str, required=True)
+    parser.add_argument('--corpus', '-c', choices=['BIOC-GS', 'GSC-2024', 'ID-68', 'NCBI'], type=str, required=True)
+    parser.add_argument('--output', '-o', help="output prediction file", type=str, required=True)
+    parser.add_argument('--tau_1', help="high-confidence threshold for model", type=float, default=0.95)
+    parser.add_argument('--tau_2', help="low-confidence threshold for model", type=float, default=0.85)
+    parser.add_argument('--llm', help="which llm to use for EL, or neglect this for no EL", choices=['gpt', 'llama'], type=str)
+    parser.add_argument('--api_key', help="api key for OpenAI API, used for gpt", type=str)
     args = parser.parse_args()
 
     dict_str = f'dict_{args.ontology.lower()}'
@@ -76,7 +79,10 @@ if __name__=="__main__":
     base_name, ext = os.path.splitext(name)
     cand_path = os.path.join(output_dir, base_name + '.json')
 
-    nn_model=bioTag_SapBERT(vocabfiles, llm=args.llm, cand_path=cand_path)
+    load_dotenv()
+    api_key = args.api_key if args.api_key else os.getenv("OPENAI_API_KEY")
+
+    nn_model=bioTag_SapBERT(vocabfiles, args.tau_1, args.tau_2, args.llm, api_key, cand_path=cand_path)
     
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
@@ -87,5 +93,5 @@ if __name__=="__main__":
            'outfile': args.output}
     
     start_time=time.time()
-    run_gsc_test(files,biotag_dic,nn_model,args.ts,batch=(args.llm=='llama'))
+    run_gsc_test(files,biotag_dic,nn_model,args.tau_1,batch=(args.llm=='llama'))
     logging.info(f'{args.corpus} done: {time.time()-start_time}')

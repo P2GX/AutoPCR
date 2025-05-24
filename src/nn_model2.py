@@ -10,6 +10,7 @@ import yaml
 from utils_llm import prompt, prompt_batch
 import os
 import torch
+from openai import OpenAI
 
 GROUNDING_PROMPT = (
     "As an expert clinician, your task is to accurately link the entity using the concepts listed below. "
@@ -82,7 +83,8 @@ def gen_grounding_prompt2_llama(mention, concepts, text, linking_fields=None, ex
 
 
 class bioTag_SapBERT:
-    def __init__(self, model_files, llm, cand_path):
+    def __init__(self, model_files, tau_1, tau_2, llm, api_key, cand_path=''):
+        self.model_type = 'sapbert'
         self.tokenizer = AutoTokenizer.from_pretrained('cambridgeltl/SapBERT-from-PubMedBERT-fulltext')
         self.model = AutoModel.from_pretrained('cambridgeltl/SapBERT-from-PubMedBERT-fulltext').cuda()
         # self.tokenizer = AutoTokenizer.from_pretrained('microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext')
@@ -95,6 +97,8 @@ class bioTag_SapBERT:
         self.index_to_id = json.load(open(model_files['index_to_id'], 'r'))
         self.id_to_concept = json.load(open(model_files['id_to_concept'], 'r'))
         self.llm = llm
+        self.llm_range = (tau_2, tau_1)
+        self.client = OpenAI(api_key=api_key) if api_key else None
         self.cand_path = cand_path
         self.counter = 0
 
@@ -133,14 +137,14 @@ class bioTag_SapBERT:
             lines += '\t'.join([f'{concepts[i][j][1]}|{concepts[i][j][2]}' for j in range(Top_N)]) + '\n'
         return lines
 
-    def predict_llm(self, x, texts, Top_N=5, llm_range=(0.85, 0.95), confidence=('HIGH')):
+    def predict_llm(self, x, texts, Top_N=5, confidence=('HIGH')):
         self.counter += len(x)
         concepts = self.get_cand(x, Top_N)
         pr = {}
         for i in range(len(x)):
             if ' ' not in x[i]:
                 continue
-            if llm_range[0] < concepts[i][0][2] <= llm_range[1]:
+            if self.llm_range[0] < concepts[i][0][2] <= self.llm_range[1]:
                 # concepts_ = {}
                 # for k in range(len(concepts[i])):
                 #     if concepts[i][k][0]['id'] not in concepts_:
@@ -151,7 +155,7 @@ class bioTag_SapBERT:
                 concepts_ = list({concepts[i][k][0]['id']: concepts[i][k][0] for k in range(Top_N)}.values())
                 pr[i] = gen_grounding_prompt2({'label': x[i]}, concepts_, texts[i])
         # print(pr)
-        responses = prompt(pr, self.llm)
+        responses = prompt(pr, self.llm, self.client)
         lines = ''
         for i in range(len(x)):
             if i in responses:
@@ -163,7 +167,7 @@ class bioTag_SapBERT:
             lines += '\t'.join([f'{concepts[i][j][1]}|{concepts[i][j][2]}' for j in range(Top_N)]) + '\n'
         return lines
 
-    def predict_llm_batch(self, x_batch, texts_batch, Top_N=5, llm_range=(0.85, 0.95), confidence=('HIGH')):
+    def predict_llm_batch(self, x_batch, texts_batch, Top_N=5, confidence=('HIGH')):
         if os.path.exists(self.cand_path):
             concepts_batch = json.load(open(self.cand_path, 'r'))
             concepts_batch = {int(i): {int(j): concepts[j] for j in concepts} for i, concepts in concepts_batch.items()}
@@ -179,7 +183,7 @@ class bioTag_SapBERT:
             for j, x in enumerate(x_batch):
                 pr, concepts, texts = {}, concepts_batch[j], texts_batch[j]
                 for i in range(len(x)):
-                    if llm_range[0] < concepts[i][0][2] <= llm_range[1]:
+                    if self.llm_range[0] < concepts[i][0][2] <= self.llm_range[1]:
                         concepts_ = list({concepts[i][k][0]['id']: concepts[i][k][0] for k in range(Top_N)}.values())
                         pr[i] = gen_grounding_prompt2_llama({'label': x[i]}, concepts_, texts[i])
                 pr_batch[j] = pr
