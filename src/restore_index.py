@@ -75,28 +75,3 @@ def restore_index_nest_fn(ori_text,file_pre):
                 sentence_ori=sentence_ori[temp_id+len(sentence_pre[i]):]
 #    print('resotre:',restore_result)
     return restore_result
-
-if __name__=='__main__':
-    path='//panfs/pan1/bionlp/lulab/luoling/HPO_project/bioTag/data/test/gsc/result/'
-    fin=open(path+'GSCplus_Nest_biobert.tsv','r',encoding='utf-8')
-    fout=open(path+'GSCplus_Nest_restore_biobert.tsv','w',encoding='utf-8')
-    all_context=fin.read().strip().split('\n\n\n\n')
-    fin.close()
-    file_num=0
-    for doc in all_context:
-        file_num+=1
-        print('file_num:',file_num)
-        doc_ele=doc.split('\n\n')
-        first_line = doc_ele[0].split('\n')
-        pmid=first_line[0]
-        ori_text=first_line[1]
-        pre_result='\n\n'.join(doc_ele[1:])
-#        print('pmid:',pmid)
-#        print('ori:',ori_text)
-#        print('pre:',pre_result)
-        final_result=restore_index_nest_fn(ori_text,pre_result)
-        fout.write(pmid+'\n'+ori_text+'\n')
-        for ele in final_result:
-            fout.write('\t'.join(ele)+'\t'+ori_text[int(ele[0]):int(ele[1])]+'\n')
-        fout.write('\n')
-    fout.close()

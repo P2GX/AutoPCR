@@ -3,15 +3,12 @@ from dic_ner import dic_ont
 from tagging_text import bioTag, bioTag_batch
 import os
 import time
-import json
-import tensorflow as tf
 import logging
 from tqdm import tqdm
-import nltk
 from nn_model2 import bioTag_SapBERT
-from evaluate import GSCplus_corpus_hponew as GSCplus_corpus
-from evaluate import JAX_corpus_hponew as JAX_corpus
+from evaluate import GSCplus_corpus
 from dotenv import load_dotenv
+from utils_pbert_ee import process_text2phrases_pb
 
 '''
 config = tf.ConfigProto()  
@@ -53,6 +50,78 @@ def run_gsc_test(files,biotag_dic,nn_model,ts,batch=False):
     GSCplus_corpus(files['outfile'],files['testfile'],subtree=True)
 
 
+def run_gsc_test_ner(files,nn_model,ts,disjoint):
+    fin_test=open(files['testfile'],'r',encoding='utf-8')
+    all_test=fin_test.read().strip().split('\n\n')
+    fin_test.close()
+    test_out=open(files['outfile'],'w',encoding='utf-8')
+
+    phrasefile = '/'.join(testfile.split('/')[:-1]) + '/phrases.json'
+    if os.path.exists(phrasefile):
+        all_phrases = json.load(phrasefile, 'r')
+    else:
+        all_phrases = {}
+        for doc_test in tqdm(all_test):
+            lines=doc_test.split('\n')
+            text, phrases_list = process_text2phrases_pb(lines[1])
+            all_phrases[lines[0]] = {'text_new': text}
+            all_phrases[lines[0]]['phrases'] = [{'start': int(p.start_loc), 'end': int(p.end_loc), 'phrase': text[int(p.start_loc):int(p.end_loc)], 'phrase_nostopword': p.toString()} for p in phrases_list]
+        json.dump(all_phrases, open(phrasefile, 'w'))
+
+    for doc_test in tqdm(all_test):
+        lines=doc_test.split('\n')
+        pmid = lines[0]
+        annotations = nn_model.predict_llm([phrase['phrase'] for phrase in all_phrases[pmid]['phrases']], lines[1] * len(all_phrases[pmid]['phrases']))
+        test_out.write(pmid+'\n'+lines[1]+'\n')
+        
+        anns = []
+        for phrase, ele in zip(all_phrases[pmid]['phrases'], annotations.split('\n')):
+            start, end = phrase['start'], phrase['end']
+            uri, score = ele.split('\t')[0].split('|')
+            score = min(float(score), 1.0)
+            if abs(score) > ts:
+                anns.append((str(start), str(end), phrase['phrase'], uri, str(score)))
+        anns = list({(ann[0], ann[1]): ann for ann in anns}.values()) # remove duplicates in phrases
+        
+        anns_new = []
+        for i in range(len(anns)):
+            overlap = False
+            for j in range(len(anns)): # outer / inner
+                if i != j and int(anns[j][0]) <= int(anns[i][0]) and int(anns[i][1]) <= int(anns[j][1]) and int(anns[i][1]) - int(anns[i][0]) < int(anns[j][1]) - int(anns[j][0]) and anns[i][3] == anns[j][3]:
+                # if i != j and int(anns[i][0]) <= int(anns[j][0]) and int(anns[j][1]) <= int(anns[i][1]) and int(anns[j][1]) - int(anns[j][0]) < int(anns[i][1]) - int(anns[i][0]) and anns[i][3] == anns[j][3]:
+                    overlap = True
+                    break
+            if not overlap:
+                anns_new.append(anns[i])
+        
+        for ann in anns_new:
+            test_out.write(ann[0]+'\t'+ann[1]+'\t'+ann[2]+'\t'+ann[3]+'\t'+ann[4]+'\n')
+        test_out.write('\n')
+    test_out.close()
+
+    # only keep longest overlapped entities
+    if disjoint:
+        all_lines = []
+        for line in open(files['outfile'], 'r').read().strip().split('\n\n'):
+            line = line.split('\n')
+            anns = [ann.split('\t') for ann in line[2:]]
+            anns_new = []
+            for i in range(len(anns)):
+                overlap = False
+                for j in range(len(anns)):
+                    if i != j and int(anns[j][0]) <= int(anns[i][0]) and int(anns[i][1]) <= int(anns[j][1]) and int(anns[i][1]) - int(anns[i][0]) < int(anns[j][1]) - int(anns[j][0]):
+                        overlap = True
+                        break
+                if not overlap:
+                    anns_new.append(anns[i])
+            line_new = '\n'.join(line[:2] + ['\t'.join(ann) for ann in anns_new])
+            all_lines.append(line_new)
+        all_lines = '\n\n'.join(all_lines)
+        open(files['outfile'], 'w').write(all_lines)
+
+    GSCplus_corpus(files['outfile'],files['testfile'],subtree=True)
+
+
 if __name__=="__main__":
     
     parser = argparse.ArgumentParser()
@@ -75,14 +144,14 @@ if __name__=="__main__":
                 'index_to_id': f'../{dict_str}/index_to_id_lable.json',
                 'id_to_concept': f'../{dict_str}/id_to_concept.json'}
 
-    output_dir, name = os.path.split(args.output)
-    base_name, ext = os.path.splitext(name)
-    cand_path = os.path.join(output_dir, base_name + '.json')
+    # output_dir, name = os.path.split(args.output)
+    # base_name, ext = os.path.splitext(name)
+    # cand_path = os.path.join(output_dir, base_name + '.json')
 
     load_dotenv()
-    api_key = args.api_key if args.api_key else os.getenv("OPENAI_API_KEY")
+    api_key = args.api_key if args.api_key else os.getenv('OPENAI_API_KEY')
 
-    nn_model=bioTag_SapBERT(vocabfiles, args.tau_1, args.tau_2, args.llm, api_key, cand_path=cand_path)
+    nn_model=bioTag_SapBERT(vocabfiles, args.tau_1, args.tau_2, args.llm, api_key)
     
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
@@ -93,5 +162,10 @@ if __name__=="__main__":
            'outfile': args.output}
     
     start_time=time.time()
-    run_gsc_test(files,biotag_dic,nn_model,args.tau_1,batch=(args.llm=='llama'))
+    if args.corpus == 'BIOC-GS':
+        run_gsc_test(files,biotag_dic,nn_model,args.tau_1,batch=(args.llm=='llama'))
+    elif args.corpus in ['GSC-2024', 'ID-68']:
+        run_gsc_test_ner(files,nn_model,args.tau_1,disjoint=False)
+    elif args.corpus == 'NCBI':
+        run_gsc_test_ner(files,nn_model,args.tau_1,disjoint=True)
     logging.info(f'{args.corpus} done: {time.time()-start_time}')

@@ -36,6 +36,7 @@ dependencies:
   - debugpy=1.8.13=py310hf71b8c6_0
   - decorator=5.2.1=pyhd8ed1ab_0
   - distro=1.9.0=pyhd8ed1ab_1
+  - emoji=2.14.1=pyhd8ed1ab_0
   - exceptiongroup=1.2.2=pyhd8ed1ab_1
   - executing=2.1.0=pyhd8ed1ab_1
   - faiss-gpu=1.8.0=py3.10_hedc54c9_0_cuda11.4.4
@@ -153,10 +154,12 @@ dependencies:
   - spacy-loggers=1.0.5=pyhd8ed1ab_0
   - srsly=2.5.1=py310hf71b8c6_1
   - stack_data=0.6.3=pyhd8ed1ab_1
+  - stanza=1.10.1=pyhd8ed1ab_1
   - sympy=1.13.3=pypyh2585a3b_103
   - tbb=2021.13.0=hceb3a55_1
   - thinc=8.3.2=py310ha2bacc8_1
   - tk=8.6.13=noxft_h4845f30_101
+  - tomli=2.2.1=pyhd8ed1ab_1
   - torchtriton=3.1.0=py310
   - tornado=6.4.2=py310ha75aee5_0
   - tqdm=4.67.1=pyhd8ed1ab_1
