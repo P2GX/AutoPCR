@@ -4,7 +4,8 @@
 *.env
 **/__pycache__
 **/.DS_Store
-results/
+results/*
+!results/.gitkeep
 dict/
 ontology/
 data/corpus/
