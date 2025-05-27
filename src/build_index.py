@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 from tqdm.auto import tqdm
 from transformers import AutoTokenizer, AutoModel
 import os
