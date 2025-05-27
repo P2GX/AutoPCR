@@ -28,23 +28,45 @@ cd src
 ```
 
 ### Build the ontology dictionary
+Parameters:
+- --input, -i, help="ontology .obo file"
+- --output, -o, help="output folder of the dictionary"
+- --rootnode, -r, help="root node of the ontology"
+
+Examples:
 ```bash
-python build_dict.py --input ../ontology/hp_20240208.obo --output ../dict/HPO/ --rootnode HP:0000118
-python build_dict.py --input ../ontology/CTD_diseases.obo --output ../dict/MEDIC/ --rootnode MESH:C
+python build_dict.py -i ../ontology/hp_20240208.obo -o ../dict/HPO/ -r HP:0000118
+python build_dict.py -i ../ontology/CTD_diseases.obo -o ../dict/MEDIC/ -r MESH:C
 ```
 
 ### Build the ontology index using SapBERT
+Parameters:
+- --ontology_dict, help="folder of the ontology dictionary"
+
+Examples:
 ```bash
 python build_index.py --ontology_dict ../dict/HPO
 python build_index.py --ontology_dict ../dict/MEDIC
 ```
 
 ### Run experiments
+Paramaters:
+- --ontology_dict, help="folder of the ontology dictionary"
+- --corpus, -c, help="input corpus dataset"
+- --output, -o, help="output prediction file"
+- --tau_1, help="high-confidence threshold for model", default=0.95
+- --tau_2, help="low-confidence threshold for model", default=0.85
+- --llm, help="which llm to use for entity linking, or skip for no entity linking", choices=['gpt', 'llama']
+- --api_key, help="api key for OpenAI API, or load from .env"
+- --ee, help="entity extraction method", choices=['rule', 'neural']
+- --longest, help="whether the output only keeps the longest nested entity"
+
+Examples:
 ```bash
-python HPO_evaluation.py --ontology_dict ../dict/HPO -c BIOC-GS -o ../results/bioc-gs.tsv --llm gpt -ee rule
-python HPO_evaluation.py --ontology_dict ../dict/HPO -c GSC-2024 -o ../results/gsc-2024.tsv --llm gpt -ee neural 
-python HPO_evaluation.py --ontology_dict ../dict/HPO -c ID-68 -o ../results/id-68.tsv --llm gpt -ee neural --longest
-python HPO_evaluation.py --ontology_dict ../dict/MEDIC -c NCBI -o ../results/ncbi.tsv --llm gpt -ee neural
+python HPO_evaluation.py --ontology_dict ../dict/HPO -c BIOC-GS -o ../results/bioc-gs.tsv --llm gpt --ee rule
+python HPO_evaluation.py --ontology_dict ../dict/HPO -c GSC-2024 -o ../results/gsc-2024.tsv --llm gpt --ee neural 
+python HPO_evaluation.py --ontology_dict ../dict/HPO -c ID-68 -o ../results/id-68.tsv --llm gpt --ee neural --longest
+python HPO_evaluation.py --ontology_dict ../dict/MEDIC -c NCBI -o ../results/ncbi.tsv --llm gpt --ee neural
 ```
 
 ## 📚 Acknowledgements

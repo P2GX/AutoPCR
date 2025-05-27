@@ -394,34 +394,3 @@ def ner_abbr(ner_result,abbr_result,ori_text):
     final_result=sorted(final_result.items(), key=lambda kv:(kv[1]), reverse=False)
     
     return final_result
-
-
-            
-            
-if __name__ == '__main__':
-    path='//panfs/pan1/bionlp/lulab/luoling/HPO_project/diseaseTag/data/test/results/'
-    fin=open(path+'NCBI_test_phecr_95.tsv','r',encoding='utf-8')
-    context=fin.read().strip().split('\n\n')
-    fin.close()
-    fout=open(path+'NCBI_test_phecr_abbre_95.tsv','w',encoding='utf-8')
-    for doc in context:
-        lines=doc.split('\n')
-        ori_text=lines[1]
-        # print(ori_text)
-        fout.write(lines[0]+'\n'+lines[1]+'\n')
-        if len(lines)>2:
-            abbr_result=extract_abbreviation_definition_pairs(doc_text=ori_text)
-            print(abbr_result)
-            abbr_out=ner_abbr(lines[2:],abbr_result,ori_text)
-        else:
-            abbr_out=[]
-        # print('final:',abbr_out)
-        for ele in abbr_out:
-            fout.write(ele[0]+'\n')
-        fout.write('\n')
-        # sys.exit()
-    fout.close()
-    #last_out=combine_ml_dict_fn(abbr_out,infile)
-    #print(last_out)
-    
-    

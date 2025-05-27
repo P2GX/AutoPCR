@@ -126,16 +126,16 @@ if __name__=="__main__":
     
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--ontology_dict', type=str, required=True)
-    parser.add_argument('--corpus', '-c', type=str, required=True)
+    parser.add_argument('--ontology_dict', help="folder of the ontology dictionary", type=str, required=True)
+    parser.add_argument('--corpus', '-c', help="input corpus dataset", type=str, required=True)
     parser.add_argument('--output', '-o', help="output prediction file", type=str, required=True)
     parser.add_argument('--tau_1', help="high-confidence threshold for model", type=float, default=0.95)
     parser.add_argument('--tau_2', help="low-confidence threshold for model", type=float, default=0.85)
-    parser.add_argument('--llm', help="which llm to use for entity linking, or none for skipping entity linking", choices=['gpt', 'llama'], type=str)
-    parser.add_argument('--api_key', help="api key for OpenAI API, used for gpt", type=str)
+    parser.add_argument('--llm', help="which llm to use for entity linking, or skip for no entity linking", choices=['gpt', 'llama'], type=str)
+    parser.add_argument('--api_key', help="api key for OpenAI API, or load from .env", type=str)
 
-    parser.add_argument('--ee_method', '-ee', help="entity extraction method", choices=['rule', 'neural'], type=str, required=True)
-    parser.add_argument('--longest', help='whether the output only keeps the longest nested entity', action='store_true')
+    parser.add_argument('--ee', help="entity extraction method", choices=['rule', 'neural'], type=str, required=True)
+    parser.add_argument('--longest', help="whether the output only keeps the longest nested entity", action='store_true')
     
     args = parser.parse_args()
 
