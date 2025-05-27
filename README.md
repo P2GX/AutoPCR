@@ -15,7 +15,7 @@ The two ontologies used are available at [HPO](https://github.com/obophenotype/h
 
 Please unzip the files if you need to use them.
 ```bash
-unzip data/corpus.zip
+unzip data/corpus.zip -d data/
 unzip ontology.zip
 ```
 
