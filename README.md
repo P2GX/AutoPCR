@@ -14,7 +14,10 @@ These datasets should be formated according to NCBI and processed by the functio
 The two ontologies used are available at [HPO](https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2024-02-08/hp.obo) and [MEDIC](https://ctdbase.org/reports/CTD_diseases.obo.gz), and also provided in ontology.zip.
 
 Please unzip the files if you need to use them.
-
+```bash
+unzip data/corpus.zip
+unzip ontology.zip
+```
 
 ## 🔁 Usage
 
