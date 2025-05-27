@@ -1,12 +1,4 @@
-# mamba activate tagger
-
-# GSC24
-# python HPO_evaluation.py -m sapbert -c gsc24 -o ../results/gsc24_sapbert_95.tsv --ts 0.95
-# python HPO_evaluation.py -m sapbert -c gsc24 -o ../results/gsc24_sapbert_95_llama.tsv --ts 0.95 --llm llama
-# python HPO_evaluation.py -m sapbert -c gsc24 -o ../results/gsc24_sapbert_8595_gpt_test.tsv --ts 0.95 --llm gpt
-
-# BIO-GS
-# python HPO_evaluation.py -m sapbert -c biogs -o ../results/biogs_sapbert.tsv --ts 0.95 --llm gpt
-
-# ID-68
-# python HPO_evaluation.py -m sapbert -c id68 -o ../results/id68_sapbert_95_gpt85_tt25.tsv --ts 0.95 --llm gpt
+python HPO_evaluation.py -onto HPO -c BIOC-GS -o ../results/bioc-gs.tsv --llm gpt -ee rule
+python HPO_evaluation.py -onto HPO -c GSC-2024 -o ../results/gsc-2024.tsv --llm gpt -ee neural 
+python HPO_evaluation.py -onto HPO -c ID-68 -o ../results/id-68.tsv --llm gpt -ee neural --longest
+python HPO_evaluation.py -onto MEDIC -c NCBI -o ../results/ncbi.tsv --llm gpt -ee neural

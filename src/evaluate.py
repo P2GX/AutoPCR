@@ -207,11 +207,11 @@ def find_maxlen_entity_nest(nest_list):
 
 
 #turn the GSC to gold HPO id, only subtree,drop the nest entity with same hpoid, remain the longest
-def GSCplus_corpus_gold(goldfile_ori, goldfile, dict_dir):
+def GSCplus_corpus_gold(goldfile_ori, goldfile, ontology_dict):
     fin=open(goldfile_ori,'r',encoding='utf-8')
     fout=open(goldfile,'w',encoding='utf-8')
-    fin_alt=open(f'{dict_dir}/alt_hpoid.json','r',encoding='utf-8')
-    fin_subtree=open(f'{dict_dir}/lable.vocab','r',encoding='utf-8')
+    fin_alt=open(f'{ontology_dict}/alt_hpoid.json','r',encoding='utf-8')
+    fin_subtree=open(f'{ontology_dict}/lable.vocab','r',encoding='utf-8')
     alt_hpoid=json.load(fin_alt)
     fin_alt.close()
     subtree_list=fin_subtree.read().strip().split('\n')
@@ -272,11 +272,11 @@ def GSCplus_corpus_gold(goldfile_ori, goldfile, dict_dir):
     fout.close()
 
 
-def GSCplus_corpus(prefile,goldfile,dict_dir,subtree=True):
+def GSCplus_corpus(prefile,goldfile,ontology_dict,subtree=True):
     fin_pre=open(prefile,'r',encoding='utf-8')
     fin_gold=open(goldfile,'r',encoding='utf-8')
-    fin_alt=open(f'{dict_dir}/alt_hpoid.json','r',encoding='utf-8')
-    fin_subtree=open('{dict_dir}/lable.vocab','r',encoding='utf-8')
+    fin_alt=open(f'{ontology_dict}/alt_hpoid.json','r',encoding='utf-8')
+    fin_subtree=open(f'{ontology_dict}/lable.vocab','r',encoding='utf-8')
     alt_hpoid=json.load(fin_alt)
     fin_alt.close()
     subtree_list=fin_subtree.read().strip().split('\n')

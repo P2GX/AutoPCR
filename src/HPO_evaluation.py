@@ -47,7 +47,7 @@ def run_gsc_test(files,biotag_dic,nn_model,ts,batch=False):
                 test_out.write(ele[0]+'\t'+ele[1]+'\t'+lines[1][int(ele[0]):int(ele[1])]+'\t'+ele[2]+'\t'+ele[3]+'\n')
             test_out.write('\n')
         test_out.close()
-    GSCplus_corpus(files['outfile'],files['testfile'],subtree=True)
+    GSCplus_corpus(files['outfile'],files['testfile'],files['ontology_dict'],subtree=True)
 
 
 def run_gsc_test_ner(files,nn_model,ts,disjoint):
@@ -119,30 +119,34 @@ def run_gsc_test_ner(files,nn_model,ts,disjoint):
         all_lines = '\n\n'.join(all_lines)
         open(files['outfile'], 'w').write(all_lines)
 
-    GSCplus_corpus(files['outfile'],files['testfile'],subtree=True)
+    GSCplus_corpus(files['outfile'],files['testfile'],files['ontology_dict'],subtree=True)
 
 
 if __name__=="__main__":
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ontology', '-onto', choices=['HPO', 'MEDIC'], type=str, required=True)
-    parser.add_argument('--corpus', '-c', choices=['BIOC-GS', 'GSC-2024', 'ID-68', 'NCBI'], type=str, required=True)
+
+    parser.add_argument('--ontology_dict', type=str, required=True)
+    parser.add_argument('--corpus', '-c', type=str, required=True)
     parser.add_argument('--output', '-o', help="output prediction file", type=str, required=True)
     parser.add_argument('--tau_1', help="high-confidence threshold for model", type=float, default=0.95)
     parser.add_argument('--tau_2', help="low-confidence threshold for model", type=float, default=0.85)
-    parser.add_argument('--llm', help="which llm to use for EL, or neglect this for no EL", choices=['gpt', 'llama'], type=str)
+    parser.add_argument('--llm', help="which llm to use for entity linking, or none for skipping entity linking", choices=['gpt', 'llama'], type=str)
     parser.add_argument('--api_key', help="api key for OpenAI API, used for gpt", type=str)
+
+    parser.add_argument('--ee_method', '-ee', help="entity extraction method", choices=['rule', 'neural'], type=str, required=True)
+    parser.add_argument('--longest', help='whether the output only keeps the longest nested entity', action='store_true')
+    
     args = parser.parse_args()
 
-    dict_str = f'dict_{args.ontology.lower()}'
-    ontfiles={'dic_file':f'../{dict_str}/noabb_lemma.dic',
-                'word_hpo_file':f'../{dict_str}/word_id_map.json',
-                'hpo_word_file':f'../{dict_str}/id_word_map.json'}
+    ontfiles={'dic_file':f'{args.ontology_dict}/noabb_lemma.dic',
+                'word_hpo_file':f'{args.ontology_dict}/word_id_map.json',
+                'hpo_word_file':f'{args.ontology_dict}/id_word_map.json'}
     biotag_dic=dic_ont(ontfiles)
 
-    vocabfiles={'index': f'../{dict_str}/{args.ontology.lower()}_lable.index',
-                'index_to_id': f'../{dict_str}/index_to_id_lable.json',
-                'id_to_concept': f'../{dict_str}/id_to_concept.json'}
+    vocabfiles={'index': f'{args.ontology_dict}/main_lable.index',
+                'index_to_id': f'{args.ontology_dict}/index_to_id_lable.json',
+                'id_to_concept': f'{args.ontology_dict}/id_to_concept.json'}
 
     # output_dir, name = os.path.split(args.output)
     # base_name, ext = os.path.splitext(name)
@@ -159,13 +163,15 @@ if __name__=="__main__":
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     
     files={'testfile': f'../data/corpus/{args.corpus}/{args.corpus}_test_gold.tsv',
-           'outfile': args.output}
+           'outfile': args.output,
+           'ontology_dict': args.ontology_dict}
     
     start_time=time.time()
-    if args.corpus == 'BIOC-GS':
+    if args.ee_method == 'rule':
         run_gsc_test(files,biotag_dic,nn_model,args.tau_1,batch=(args.llm=='llama'))
-    elif args.corpus in ['GSC-2024', 'ID-68']:
-        run_gsc_test_ner(files,nn_model,args.tau_1,disjoint=False)
-    elif args.corpus == 'NCBI':
-        run_gsc_test_ner(files,nn_model,args.tau_1,disjoint=True)
+    elif args.ee_method == 'neural':
+        if args.longest:
+            run_gsc_test_ner(files,nn_model,args.tau_1,disjoint=True)
+        else:
+            run_gsc_test_ner(files,nn_model,args.tau_1,disjoint=False)
     logging.info(f'{args.corpus} done: {time.time()-start_time}')

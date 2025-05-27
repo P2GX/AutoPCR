@@ -89,8 +89,6 @@ class bioTag_SapBERT:
         self.model = AutoModel.from_pretrained('cambridgeltl/SapBERT-from-PubMedBERT-fulltext').cuda()
         # self.tokenizer = AutoTokenizer.from_pretrained('microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext')
         # self.model = AutoModel.from_pretrained('microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext').cuda()
-        # self.tokenizer = AutoTokenizer.from_pretrained('../../sapbert/train/tmp/SapBERT-HPO')
-        # self.model = AutoModel.from_pretrained('../../sapbert/train/tmp/SapBERT-HPO').cuda()
         # self.tokenizer = AutoTokenizer.from_pretrained('../../sapbert/train/tmp/sapbert_umls-hpo')
         # self.model = AutoModel.from_pretrained('../../sapbert/train/tmp/sapbert_umls-hpo').cuda()
         self.index = faiss.index_cpu_to_gpu(faiss.StandardGpuResources(), 0, faiss.read_index(model_files['index']))
