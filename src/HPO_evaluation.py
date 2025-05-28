@@ -167,9 +167,9 @@ if __name__=="__main__":
            'ontology_dict': args.ontology_dict}
     
     start_time=time.time()
-    if args.ee_method == 'rule':
+    if args.ee == 'rule':
         run_gsc_test(files,biotag_dic,nn_model,args.tau_1,batch=(args.llm=='llama'))
-    elif args.ee_method == 'neural':
+    elif args.ee == 'neural':
         if args.longest:
             run_gsc_test_ner(files,nn_model,args.tau_1,disjoint=True)
         else:
