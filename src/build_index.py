@@ -5,6 +5,7 @@ import os
 import json
 import faiss
 import argparse
+from dotenv import load_dotenv
 
 
 def get_embs(all_names, tokenizer, model, bs=128):
@@ -63,6 +64,54 @@ def build_index(ontology_dict, tokenizer, model):
     faiss_index_filtered.add(embs_filtered)
     faiss.write_index(faiss_index_filtered, f'{ontology_dict}/main_lable.index')
 
+    def list2str(l, delimiter=' | '):
+        return delimiter.join([str(i) for i in l])
+
+    def combine_lists(lists):
+        new_list = []
+        for l in lists:
+            new_list.append(l)
+        return new_list
+
+    concepts = {}
+    aid_map = {}
+    for id, concept in tqdm(hpo_concepts.items()):
+        id = id.replace(':', '_')
+        concepts[id] = {
+            "id": id,
+            "label": concept['name'][0],
+            "definition": concept['def'],
+            "synonyms": list2str([s[0] for s in concept['synonym']]),
+            "is_a": list2str([c.replace(':', '_') for c in concept['is_a']])
+        }
+    json.dump(concepts, open(f'{ontology_dict}/id_to_concept.json', 'w'))
+
+    def get_umls_name(s):
+        load_dotenv()
+        apikey = os.getenv('UMLS_API_KEY')
+        version = 'current'
+
+        base_uri = 'https://uts-ws.nlm.nih.gov'
+        path = '/search/' + version
+        query = {'string':s, 'apiKey':apikey}
+        output = requests.get(base_uri + path, params=query)
+        output.encoding = 'utf-8'
+            
+        outputJson = output.json()
+        
+        names = []
+        if len(outputJson['result']) == 0:
+            print('No results found for ' + identifier +'\n')        
+        else:  
+            names = [r['name'] for r in outputJson['result']['results'] if r['rootSource'] != 'HPO']
+        return names
+
+    if ontology_dict == '../dict/HPO':
+        umls_syns = {}
+        if os.path.exists('../data/HPO_UMLS-synonyms.json'):
+            umls_syns = json.load(open('../data/HPO_UMLS-synonyms.json', 'r'))
+        concepts = {id: concept | {'UMLS synonyms': umls_syns[id]['UMLS synonyms'] if id in umls_syns else list2str(get_umls_name(concept['label']))} for id, concept in tqdm(concepts.items())}
+        json.dump(concepts, open(f'{ontology_dict}/id_to_concept.json', 'w'))
 
 if __name__ == '__main__':
     tokenizer = AutoTokenizer.from_pretrained("cambridgeltl/SapBERT-from-PubMedBERT-fulltext")  
