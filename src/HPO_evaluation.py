@@ -60,7 +60,7 @@ def run_gsc_test_ner(files,nn_model,ts,disjoint):
 
     phrasefile = '/'.join(files['testfile'].split('/')[:-1]) + '/phrases.json'
     if os.path.exists(phrasefile):
-        all_phrases = json.load(phrasefile, 'r')
+        all_phrases = json.load(open(phrasefile, 'r'))
     else:
         all_phrases = {}
         for doc_test in tqdm(all_test):
