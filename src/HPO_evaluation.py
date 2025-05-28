@@ -9,6 +9,8 @@ from nn_model2 import bioTag_SapBERT
 from evaluate import GSCplus_corpus
 from dotenv import load_dotenv
 from utils_pbert_ee import process_text2phrases_pb
+import json
+
 
 '''
 config = tf.ConfigProto()  
