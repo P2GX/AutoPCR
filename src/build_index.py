@@ -54,7 +54,7 @@ def build_index(ontology_dict, tokenizer, model):
     ids_filtered = open(f'{ontology_dict}/lable.vocab', 'r').read().strip().split('\n')
     indices_filtered = [index for index, id in index_to_id.items() if id in ids_filtered]
     index_to_id_filtered = {i: index_to_id[index] for i, index in enumerate(indices_filtered)}
-    json.dump(index_to_id_filtered, open(f'../{DICT}/index_to_id_lable.json', 'w'))
+    json.dump(index_to_id_filtered, open(f'{ontology_dict}/index_to_id_lable.json', 'w'))
 
     embs = np.array([faiss_index.reconstruct(i) for i in range(faiss_index.ntotal)])
     embs_filtered = np.array([embs[int(i)] for i in indices_filtered])
