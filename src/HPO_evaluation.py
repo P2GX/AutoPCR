@@ -56,7 +56,7 @@ def run_gsc_test_ner(files,nn_model,ts,disjoint):
     fin_test.close()
     test_out=open(files['outfile'],'w',encoding='utf-8')
 
-    phrasefile = '/'.join(testfile.split('/')[:-1]) + '/phrases.json'
+    phrasefile = '/'.join(files['testfile'].split('/')[:-1]) + '/phrases.json'
     if os.path.exists(phrasefile):
         all_phrases = json.load(phrasefile, 'r')
     else:
