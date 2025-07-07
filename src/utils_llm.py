@@ -2,10 +2,22 @@ import json
 import subprocess
 
 
-def prompt(pr, model, client):
+def prompt(pr, model, client, seed):
     responses = {}
-    if model == 'gpt':
-        responses = prompt_gpt(pr, client)
+    for i in pr:
+        response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {'role': 'system',
+                        'content': pr[i]['prompt']},
+                    {'role': 'user',
+                        'content': pr[i]['mention_to_ground']}
+                ],
+                temperature=0,
+                seed=seed,
+                max_tokens=32
+            )
+        responses[i] = response.choices[0].message.content
     return responses
 
 
@@ -18,22 +30,4 @@ def prompt_batch(pr_batch_path, model):
             print(f"Error: {result.stderr}")
             return {"error": "An error occurred during the execution", "details": result.stderr}
         responses = json.load(open(pr_batch_path + '_res', 'r')) # json.loads(result.stdout)
-    return responses
-
-
-def prompt_gpt(pr, client, model='gpt-4o-mini'):
-    responses = {}
-    for i in pr:
-        response = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {'role': 'system',
-                        'content': pr[i]['prompt']},
-                    {'role': 'user',
-                        'content': pr[i]['mention_to_ground']}
-                ],
-                temperature=0,
-                seed=0
-            )
-        responses[i] = response.choices[0].message.content
     return responses

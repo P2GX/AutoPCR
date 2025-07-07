@@ -113,7 +113,7 @@ def build_index(ontology_dict, tokenizer, model):
         concepts = {id: concept | {'UMLS synonyms': umls_syns[id]['UMLS synonyms'] if id in umls_syns else list2str(get_umls_name(concept['label']))} for id, concept in tqdm(concepts.items())}
         # 去除UMLS重复的id
         for id, concept in concepts.items():
-            ori_syns = [concept['label'].lower()] + [s.lower() for s in synonyms.split(' | ')]
+            ori_syns = [concept['label'].lower()] + [s.lower() for s in concept['synonyms'].split(' | ')]
             new_umls_syns = [c for c in concept['UMLS synonyms'].split(' | ') if c.lower() not in ori_syns]
             concepts[id]['UMLS synonyms'] = list2str(new_umls_syns)
         json.dump(concepts, open(f'{ontology_dict}/id_to_concept.json', 'w'))

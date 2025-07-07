@@ -23,7 +23,7 @@ unzip ontology.zip
 
 ### Activate environment
 ```bash
-conda activate tagger
+conda activate autopcr
 cd src
 ```
 
@@ -54,19 +54,21 @@ Paramaters:
 - --ontology_dict, help="folder of the ontology dictionary"
 - --corpus, -c, help="input corpus dataset"
 - --output, -o, help="output prediction file"
-- --tau_1, help="high-confidence threshold for model", default=0.95
-- --tau_2, help="low-confidence threshold for model", default=0.85
-- --llm, help="which llm to use for entity linking, or skip for no entity linking", choices=['gpt', 'llama']
-- --api_key, help="api key for OpenAI API, or load from .env"
 - --ee, help="entity extraction method", choices=['rule', 'neural']
+- --tau_1, help="high-confidence threshold for candidate concept retrieval", default=0.95
+- --tau_2, help="low-confidence threshold for candidate concept retrieval", default=0.85
+- --k, help="number of retrieved candidate concepts", default=5
+- --llm, help="which llm (OpenAI or Groq models) to use for entity linking, or skip for no entity linking"
+- --api_key, help="OpenAI or Groq api key, or load from .env"
+- --seed, help="seed for llm", default=0
 - --longest, help="whether the output only keeps the longest nested entity"
 
 Examples:
 ```bash
-python HPO_evaluation.py --ontology_dict ../dict/HPO -c BIOC-GS -o ../results/bioc-gs.tsv --llm gpt --ee rule
-python HPO_evaluation.py --ontology_dict ../dict/HPO -c GSC-2024 -o ../results/gsc-2024.tsv --llm gpt --ee neural
-python HPO_evaluation.py --ontology_dict ../dict/HPO -c ID-68 -o ../results/id-68.tsv --llm gpt --ee neural --longest
-python HPO_evaluation.py --ontology_dict ../dict/MEDIC -c NCBI -o ../results/ncbi.tsv --llm gpt --ee neural
+python HPO_evaluation.py --ontology_dict ../dict/HPO   -c BIOC-GS  -o ../results/bioc-gs.tsv  --ee rule   --llm gpt-4o-mini
+python HPO_evaluation.py --ontology_dict ../dict/HPO   -c GSC-2024 -o ../results/gsc-2024.tsv --ee neural --llm gpt-4o-mini
+python HPO_evaluation.py --ontology_dict ../dict/HPO   -c ID-68    -o ../results/id-68.tsv    --ee neural --llm gpt-4o-mini --longest
+python HPO_evaluation.py --ontology_dict ../dict/MEDIC -c NCBI     -o ../results/ncbi.tsv     --ee neural --llm gpt-4o-mini
 ```
 
 ## 📚 Acknowledgements

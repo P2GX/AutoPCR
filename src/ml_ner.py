@@ -349,7 +349,7 @@ def decode_tsv(test_score, ml_input_index, ml_input_txt, T=0.8):
     for i in range(0,len(test_pre)):
         seg_pre=test_pre[i].split('\t')[0].split('|')
         #print(seg_pre,T)
-        if abs(float(seg_pre[1]))>T and seg_pre[0]!='HP:None':
+        if abs(float(seg_pre[1]))>=T and seg_pre[0]!='HP:None':
             term_id=str(i+1)
             pre_result=[test_index[term_id][1],test_index[term_id][2],seg_pre[0],seg_pre[1]]
             sent_id=str(test_index[term_id][0])

@@ -10,6 +10,8 @@ from evaluate import GSCplus_corpus
 from dotenv import load_dotenv
 from utils_pbert_ee import process_text2phrases_pb
 import json
+from openai import OpenAI
+from groq import Groq
 
 
 '''
@@ -17,7 +19,7 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True  
 session = tf.Session(config=config) 
 '''
-def run_gsc_test(files,biotag_dic,nn_model,ts,batch=False):
+def run_gsc_test(files,biotag_dic,nn_model,ts,disjoint,batch=False):
     fin_test=open(files['testfile'],'r',encoding='utf-8')
     all_test=fin_test.read().strip().split('\n\n')
     fin_test.close()
@@ -49,6 +51,27 @@ def run_gsc_test(files,biotag_dic,nn_model,ts,batch=False):
                 test_out.write(ele[0]+'\t'+ele[1]+'\t'+lines[1][int(ele[0]):int(ele[1])]+'\t'+ele[2]+'\t'+ele[3]+'\n')
             test_out.write('\n')
         test_out.close()
+
+    # only keep longest overlapped entities
+    if disjoint:
+        all_lines = []
+        for line in open(files['outfile'], 'r').read().strip().split('\n\n'):
+            line = line.split('\n')
+            anns = [ann.split('\t') for ann in line[2:]]
+            anns_new = []
+            for i in range(len(anns)):
+                overlap = False
+                for j in range(len(anns)):
+                    if i != j and int(anns[j][0]) <= int(anns[i][0]) and int(anns[i][1]) <= int(anns[j][1]) and int(anns[i][1]) - int(anns[i][0]) < int(anns[j][1]) - int(anns[j][0]):
+                        overlap = True
+                        break
+                if not overlap:
+                    anns_new.append(anns[i])
+            line_new = '\n'.join(line[:2] + ['\t'.join(ann) for ann in anns_new])
+            all_lines.append(line_new)
+        all_lines = '\n\n'.join(all_lines)
+        open(files['outfile'], 'w').write(all_lines)
+
     GSCplus_corpus(files['outfile'],files['testfile'],files['ontology_dict'],subtree=True)
 
 
@@ -81,7 +104,7 @@ def run_gsc_test_ner(files,nn_model,ts,disjoint):
             start, end = phrase['start'], phrase['end']
             uri, score = ele.split('\t')[0].split('|')
             score = min(float(score), 1.0)
-            if abs(score) > ts:
+            if abs(score) >= ts:
                 anns.append((str(start), str(end), phrase['phrase'], uri, str(score)))
         anns = list({(ann[0], ann[1]): ann for ann in anns}.values()) # remove duplicates in phrases
         
@@ -131,12 +154,17 @@ if __name__=="__main__":
     parser.add_argument('--ontology_dict', help="folder of the ontology dictionary", type=str, required=True)
     parser.add_argument('--corpus', '-c', help="input corpus dataset", type=str, required=True)
     parser.add_argument('--output', '-o', help="output prediction file", type=str, required=True)
-    parser.add_argument('--tau_1', help="high-confidence threshold for model", type=float, default=0.95)
-    parser.add_argument('--tau_2', help="low-confidence threshold for model", type=float, default=0.85)
-    parser.add_argument('--llm', help="which llm to use for entity linking, or skip for no entity linking", choices=['gpt', 'llama'], type=str)
-    parser.add_argument('--api_key', help="api key for OpenAI API, or load from .env", type=str)
 
     parser.add_argument('--ee', help="entity extraction method", choices=['rule', 'neural'], type=str, required=True)
+
+    parser.add_argument('--tau_1', help="high-confidence threshold for candidate concept retrieval", type=float, default=0.95)
+    parser.add_argument('--tau_2', help="low-confidence threshold for candidate concept retrieval", type=float, default=0.85)
+    parser.add_argument('--k', help='number of retrieved candidate concepts', type=int, default=5)
+
+    parser.add_argument('--llm', help="which llm (OpenAI or Groq models) to use for entity linking, or skip for no entity linking", type=str)
+    parser.add_argument('--api_key', help="OpenAI or Groq api key, or load from .env", type=str)
+    parser.add_argument('--seed', help="seed for llm", type=int, default=0)
+
     parser.add_argument('--longest', help="whether the output only keeps the longest nested entity", action='store_true')
     
     args = parser.parse_args()
@@ -150,19 +178,29 @@ if __name__=="__main__":
                 'index_to_id': f'{args.ontology_dict}/index_to_id_lable.json',
                 'id_to_concept': f'{args.ontology_dict}/id_to_concept.json'}
 
+    output_dir = os.path.dirname(args.output)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
     # output_dir, name = os.path.split(args.output)
     # base_name, ext = os.path.splitext(name)
     # cand_path = os.path.join(output_dir, base_name + '.json')
 
     load_dotenv()
-    api_key = args.api_key if args.api_key else os.getenv('OPENAI_API_KEY')
 
-    nn_model=bioTag_SapBERT(vocabfiles, args.tau_1, args.tau_2, args.llm, api_key)
+    client = None
+    if args.llm:
+        if args.llm.startswith('gpt'):
+            client = OpenAI(api_key=args.api_key if args.api_key else os.getenv('OPENAI_API_KEY'))
+        else:
+            client = Groq(api_key=args.api_key if args.api_key else os.getenv('GROQ_API_KEY')) 
+
+    nn_model=bioTag_SapBERT(vocabfiles, args.tau_1, args.tau_2, args.k, args.llm, client, args.seed)
     
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
     logging.basicConfig(filename=args.output+'_log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode='w')
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
     
     files={'testfile': f'../data/corpus/{args.corpus}/{args.corpus}_test_gold.tsv',
            'outfile': args.output,
@@ -170,10 +208,7 @@ if __name__=="__main__":
     
     start_time=time.time()
     if args.ee == 'rule':
-        run_gsc_test(files,biotag_dic,nn_model,args.tau_1,batch=(args.llm=='llama'))
+        run_gsc_test(files,biotag_dic,nn_model,args.tau_1,args.longest)
     elif args.ee == 'neural':
-        if args.longest:
-            run_gsc_test_ner(files,nn_model,args.tau_1,disjoint=True)
-        else:
-            run_gsc_test_ner(files,nn_model,args.tau_1,disjoint=False)
+        run_gsc_test_ner(files,nn_model,args.tau_1,args.longest)
     logging.info(f'{args.corpus} done: {time.time()-start_time}')
