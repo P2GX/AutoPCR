@@ -10,8 +10,8 @@ def prompt_llama(pr_batch, model='meta-llama/Llama-3.1-8B-Instruct'):
     responses = {}
     for j, pr in tqdm(pr_batch.items()):
         conversations = [
-            [{'role': 'system', 'content': pr_['prompt']},
-            {'role': 'user', 'content': pr_['mention_to_ground']}]
+            [{'role': 'system', 'content': pr_['system']},
+            {'role': 'user', 'content': pr_['user']}]
             for pr_ in pr.values()]
         outputs = llm.chat(conversations, SamplingParams(max_tokens=4096, temperature=0))
         responses[j] = {i: [output.outputs[0].text, pr[i]['real_id']] for i, output in zip(pr, outputs)}      

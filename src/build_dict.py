@@ -104,6 +104,7 @@ def build_dict(hpofile, outpath,rootnode):
     fout_obo=open(outpath+'obo.json','w',encoding='utf-8')
     
     hpo_obo={}
+    abbr = {}
     for i in range(0,len(all_obo)):
         print("Obo File Processing:{0}%".format(round(i * 100 / len(all_obo))), end="\r")
         lines=all_obo[i].split('\n')
@@ -144,8 +145,10 @@ def build_dict(hpofile, outpath,rootnode):
                 eid=line.find('" ')
                 term=line[len('synonym: "'):eid]
                 if term.isupper() and len(term)<10:
-                    pass
-#                    print('synonym name:',term)
+                    # pass
+                    # print('synonym name:',term)
+                    if hpoid in all_nodes:
+                        abbr[term.lower()] = hpoid
                 else:
                     tokens = word_tokenize(term.strip().lower().replace('-',' - ').replace('/',' / '))  
                     token_pos = nltk.pos_tag(tokens)
@@ -185,73 +188,78 @@ def build_dict(hpofile, outpath,rootnode):
                     
     json.dump(hpo_obo, fout_obo ,indent=2)
     fout_obo.close()
+    json.dump(abbr, open(outpath+'abbr.json','w',encoding='utf-8'))
     return hpo_obo
     
 #mapping all words + lemma 
 def word_hpo_map(hpo_obo, outpath):
+    for first in [False, True]:
+        fout=open(outpath+f"{'first' if first else ''}word_id_map.json",'w',encoding='utf-8')
+        
+        word_hpoid={}
 
-    fout=open(outpath+'word_id_map.json','w',encoding='utf-8')
-    
-    word_hpoid={}
+        for hpoid in hpo_obo.keys():
+            if first and hpoid not in ALL_CLEAN_NODE:
+                continue
 
-    for hpoid in hpo_obo.keys():
-        # print(hpoid)
-        first_name_ori=hpo_obo[hpoid]['name'][0]
-        first_name=hpo_obo[hpoid]['name'][1]
-        if first_name!=first_name_ori:
-            if first_name not in word_hpoid.keys():
-                word_hpoid[first_name]=[hpoid]
-            else:
-                if word_hpoid[first_name][0]!=hpoid:
+            # print(hpoid)
+            first_name_ori=hpo_obo[hpoid]['name'][0]
+            first_name=hpo_obo[hpoid]['name'][1]
+            if first_name!=first_name_ori:
+                if first_name not in word_hpoid.keys():
                     word_hpoid[first_name]=[hpoid]
+                else:
+                    if word_hpoid[first_name][0]!=hpoid:
+                        word_hpoid[first_name]=[hpoid]
 
-            if first_name_ori not in word_hpoid.keys():
-                word_hpoid[first_name_ori]=[hpoid]
-            else:
-                if word_hpoid[first_name_ori][0]!=hpoid:
+                if first_name_ori not in word_hpoid.keys():
                     word_hpoid[first_name_ori]=[hpoid]
-        else:
-            if first_name not in word_hpoid.keys():
-                word_hpoid[first_name]=[hpoid]
+                else:
+                    if word_hpoid[first_name_ori][0]!=hpoid:
+                        word_hpoid[first_name_ori]=[hpoid]
             else:
-                if word_hpoid[first_name][0]!=hpoid:
+                if first_name not in word_hpoid.keys():
                     word_hpoid[first_name]=[hpoid]
-
-               
-        for synonym in hpo_obo[hpoid]['synonym']:
-            word=synonym[1]
-            word_ori=synonym[0]
-            if word_ori == word:
-                if word not in word_hpoid.keys():
-                    word_hpoid[word]=[hpoid]
                 else:
-                    if word_hpoid[word][0]!=hpoid:
-                        old_hpoid=word_hpoid[word][0]
-                        new_hpoid=hpoid
-                        if hpo_obo[old_hpoid]['name'][1]!=word:
-                            word_hpoid[word].append(new_hpoid)
+                    if word_hpoid[first_name][0]!=hpoid:
+                        word_hpoid[first_name]=[hpoid]
+            if first:
+                continue
+                
+            for synonym in hpo_obo[hpoid]['synonym']:
+                word=synonym[1]
+                word_ori=synonym[0]
+                if word_ori == word:
+                    if word not in word_hpoid.keys():
+                        word_hpoid[word]=[hpoid]
+                    else:
+                        if word_hpoid[word][0]!=hpoid:
+                            old_hpoid=word_hpoid[word][0]
+                            new_hpoid=hpoid
+                            if hpo_obo[old_hpoid]['name'][1]!=word:
+                                word_hpoid[word].append(new_hpoid)
 
-            else:
-                if word not in word_hpoid.keys():
-                    word_hpoid[word]=[hpoid]
                 else:
-                    if word_hpoid[word][0]!=hpoid:
-                        old_hpoid=word_hpoid[word][0]
-                        new_hpoid=hpoid
-                        if hpo_obo[old_hpoid]['name'][1]!=word:
-                            word_hpoid[word].append(new_hpoid)
+                    if word not in word_hpoid.keys():
+                        word_hpoid[word]=[hpoid]
+                    else:
+                        if word_hpoid[word][0]!=hpoid:
+                            old_hpoid=word_hpoid[word][0]
+                            new_hpoid=hpoid
+                            if hpo_obo[old_hpoid]['name'][1]!=word:
+                                word_hpoid[word].append(new_hpoid)
 
-                if word_ori not in word_hpoid.keys():
-                    word_hpoid[word_ori]=[hpoid]
-                else:
-                    if word_hpoid[word_ori][0]!=hpoid:
-                        old_hpoid=word_hpoid[word_ori][0]
-                        new_hpoid=hpoid
-                        if hpo_obo[old_hpoid]['name'][0]!=word_ori:
-                            word_hpoid[word_ori].append(new_hpoid)
+                    if word_ori not in word_hpoid.keys():
+                        word_hpoid[word_ori]=[hpoid]
+                    else:
+                        if word_hpoid[word_ori][0]!=hpoid:
+                            old_hpoid=word_hpoid[word_ori][0]
+                            new_hpoid=hpoid
+                            if hpo_obo[old_hpoid]['name'][0]!=word_ori:
+                                word_hpoid[word_ori].append(new_hpoid)
 
-    json.dump(word_hpoid, fout,indent=2)
-    fout.close()
+        json.dump(word_hpoid, fout,indent=2)
+        fout.close()
     
 #hpoid word mapping    
 def hpo_word_map(hpo_obo, outpath):

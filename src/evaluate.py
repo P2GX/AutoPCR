@@ -63,13 +63,16 @@ def document_metric(pre_result, gold_result):
     elif pre_num!=0 and gold_num!=0:    
         microP=total_pre_true/pre_num
         microR=total_pre_true/gold_num
-        microF=2*microP*microR/(microP+microR)
+        if microP+microR!=0:
+            microF=2*microP*microR/(microP+microR)
+        else:
+            microF=0
     logging.info('......document level evaluation:......')
     logging.info(f'file num: {file_num}')
     logging.info(f'{gold_num} {pre_num} {total_pre_true}')
     logging.info('miP=%.5f, miR=%.5f, miF=%.5f' %(microP,microR,microF))
     logging.info('maP=%.5f, maR=%.5f, maF=%.5f' %(macroP,macroR,macroF))
-    return macroF
+    return microF
 
 
 def mention_metric_new(pre_result, gold_result):
@@ -83,6 +86,7 @@ def mention_metric_new(pre_result, gold_result):
     NEN_true_num_Rs=0
     NEN_true_num_Pr=0
     NEN_true_num_Rr=0
+    miss_gold = {}
 
     for pmid in pre_result.keys():
         
@@ -124,28 +128,38 @@ def mention_metric_new(pre_result, gold_result):
                 if gold_ele[2] in entity_pre[gold_index]:
                     NEN_true_num_Rs+=1
         
+        used = [False] * len(doc_gold)
         for pre_ele in doc_pre:
             ner_flag=0
-            for gold_ele in doc_gold:
-                if max(int(pre_ele[0]),int(gold_ele[0])) <= min(int(pre_ele[1]),int(gold_ele[1])):
+            for i, gold_ele in enumerate(doc_gold):
+                if max(int(pre_ele[0]),int(gold_ele[0])) < min(int(pre_ele[1]),int(gold_ele[1])):
                     ner_flag=1
                     if pre_ele[2]==gold_ele[2]:
-                        NEN_true_num_Pr+=1    
+                        if used[i]:
+                            logging.info(f'pmid: {pmid}, multiple gold matches: {gold_ele}')
+                            continue
+                        NEN_true_num_Pr+=1
+                        used[i] = True    
                         break
             if ner_flag==1:
                 NER_true_num_Pr+=1
-        
+        miss_gold[pmid] = [doc_gold[i] for i, u in enumerate(used) if not u]
+
+        used = [False] * len(doc_pre)
         for gold_ele in doc_gold:
-            ner_flag=0
-            for pre_ele in doc_pre:
-                pre_index=pre_ele[0]+' '+pre_ele[1]
-                if max(int(pre_ele[0]),int(gold_ele[0])) <= min(int(pre_ele[1]),int(gold_ele[1])):
-                    ner_flag=1
-                    if gold_ele[2] in entity_pre[pre_index]:
-                        NEN_true_num_Rr+=1    
+            ner_flag = 0
+            for i, pre_ele in enumerate(doc_pre):
+                if max(int(pre_ele[0]),int(gold_ele[0])) < min(int(pre_ele[1]), int(gold_ele[1])):
+                    ner_flag = 1
+                    if gold_ele[2]==pre_ele[2]:
+                        if used[i]:
+                            logging.info(f'pmid: {pmid}, multiple pre matches: {pre_ele}')
+                            continue
+                        NEN_true_num_Rr += 1
+                        used[i] = True
                         break
-            if ner_flag==1:
-                NER_true_num_Rr+=1
+            if ner_flag == 1:
+                NER_true_num_Rr += 1
 
     if pre_num==0 and gold_num==0:
         NER_P_s,NER_R_s,NER_F_s=1,1,1
@@ -187,7 +201,7 @@ def mention_metric_new(pre_result, gold_result):
     logging.info('NER P_r=%.5f, R_r=%.5f, F_r=%.5f' %(NER_P_r,NER_R_r,NER_F_r))  
     logging.info('NEN P_s=%.5f, R_s=%.5f, F_s=%.5f' %(NEN_P_s,NEN_R_s,NEN_F_s))
     logging.info('NEN P_r=%.5f, R_r=%.5f, F_r=%.5f' %(NEN_P_r,NEN_R_r,NEN_F_r))
-    return NEN_F_r
+    return NEN_F_r, miss_gold
 
 
 def find_maxlen_entity_nest(nest_list):
@@ -311,16 +325,17 @@ def GSCplus_corpus(prefile,goldfile,ontology_dict,subtree=True):
         temp_result=[]
         for i in range(2,len(lines)):
             seg=lines[i].split('\t')
-            if seg[3] in alt_hpoid.keys():
-                hpoid=alt_hpoid[seg[3]]
-                if subtree==True:
-                    if hpoid in subtree_list:
+            for id in seg[3].split('|'):
+                if id in alt_hpoid.keys():
+                    hpoid=alt_hpoid[id]
+                    if subtree==True:
+                        if hpoid in subtree_list:
+                            temp_result.append([seg[0],seg[1],hpoid])
+                    else:
                         temp_result.append([seg[0],seg[1],hpoid])
                 else:
-                    temp_result.append([seg[0],seg[1],hpoid])
-            else:
-                logging.info(f'gold hpo obo no this id: {lines[i]} {seg[3]}')
+                    logging.info(f'gold hpo obo no this id: {lines[i]} {id}')
         gold_result[pmid]=temp_result
     doc_f=document_metric(pre_result,gold_result)
-    men_f=mention_metric_new(pre_result,gold_result)
-    return doc_f+men_f
+    men_f,miss_gold=mention_metric_new(pre_result,gold_result)
+    return doc_f+men_f, miss_gold

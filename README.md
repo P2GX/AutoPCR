@@ -9,7 +9,7 @@ conda env create -f environment.yml
 
 ## 📁 Data Preparation
 The four datasets used in the experiments are available at [BIOC-GS](https://github.com/Ian-Campbell-Lab/Clinical-Genetics-Training-Data/blob/main/Physical-Exam/Clinical-Genetics-Physical-Exam-Data-Dev.tsv), [GSC-2024](https://github.com/tudorgroza/code-for-papers/tree/main/gsc-2024), [ID-68](https://github.com/EclipseCN/PhenoBERT/tree/main/phenobert/data/ID-68), and [NCBI](https://github.com/ncbi-nlp/PhenoTagger/blob/master/data/corpus.zip).
-These datasets should be formated according to NCBI and processed by the function src.evaluate.GSCplus_corpus_gold, following PhenoTagger's pipeline. The processed datasets are provided in data/corpus.zip.
+These datasets should be formatted according to NCBI and processed by the function src.evaluate.GSCplus_corpus_gold, following PhenoTagger's pipeline. The processed datasets are provided in data/corpus.zip.
 
 The two ontologies used are available at [HPO](https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2024-02-08/hp.obo) and [MEDIC](https://ctdbase.org/reports/CTD_diseases.obo.gz), and also provided in ontology.zip.
 
@@ -51,24 +51,25 @@ python build_index.py --ontology_dict ../dict/MEDIC
 
 ### Run experiments
 Paramaters:
-- --ontology_dict, help="folder of the ontology dictionary"
-- --corpus, -c, help="input corpus dataset"
-- --output, -o, help="output prediction file"
-- --ee, help="entity extraction method", choices=['rule', 'neural']
+- --ontology_dict, help="folder of the ontology dictionary", required=True
+- --corpus, -c, help="input corpus dataset", required=True
+- --output, -o, help="output prediction file", required=True
+- --ee, help="entity extraction method", choices=["rule", "neural", "neural+", "neural++"], required=True
 - --tau_1, help="high-confidence threshold for candidate concept retrieval", default=0.95
 - --tau_2, help="low-confidence threshold for candidate concept retrieval", default=0.85
 - --k, help="number of retrieved candidate concepts", default=5
 - --llm, help="which llm (OpenAI or Groq models) to use for entity linking, or skip for no entity linking"
 - --api_key, help="OpenAI or Groq api key, or load from .env"
 - --seed, help="seed for llm", default=0
-- --longest, help="whether the output only keeps the longest nested entity"
+- --only_longest, help="whether the output only keeps the longest nested entity", action="store_true"
+- --abbr_recog, help="whether to identify abbreviations", action="store_true"
 
 Examples:
 ```bash
-python HPO_evaluation.py --ontology_dict ../dict/HPO   -c BIOC-GS  -o ../results/bioc-gs.tsv  --ee rule   --llm gpt-4o-mini
-python HPO_evaluation.py --ontology_dict ../dict/HPO   -c GSC-2024 -o ../results/gsc-2024.tsv --ee neural --llm gpt-4o-mini
-python HPO_evaluation.py --ontology_dict ../dict/HPO   -c ID-68    -o ../results/id-68.tsv    --ee neural --llm gpt-4o-mini --longest
-python HPO_evaluation.py --ontology_dict ../dict/MEDIC -c NCBI     -o ../results/ncbi.tsv     --ee neural --llm gpt-4o-mini
+python HPO_evaluation.py --ontology_dict ../dict/HPO   -c BIOC-GS  -o ../results/bioc-gs.tsv --only_longest
+python HPO_evaluation.py --ontology_dict ../dict/HPO   -c GSC-2024 -o ../results/gsc-2024.tsv
+python HPO_evaluation.py --ontology_dict ../dict/HPO   -c ID-68    -o ../results/id-68.tsv --only_longest
+python HPO_evaluation.py --ontology_dict ../dict/MEDIC -c NCBI     -o ../results/ncbi.tsv --only_longest --abbr_recog
 ```
 
 ## 📚 Acknowledgements

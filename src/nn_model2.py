@@ -7,20 +7,13 @@ import json
 from tqdm import tqdm
 import re
 import yaml
-from utils_llm import prompt, prompt_batch
 import os
 import torch
+from nltk.tokenize import word_tokenize
+import nltk
 
-GROUNDING_PROMPT = (
-    "As an expert clinician, your task is to accurately link the entity using the concepts listed below. "
-    "Accuracy is paramount. "
-    # "If the entity refers to multiplt concepts, return the last one. "
-    "If the entity does not precisely refer to any of the concepts listed below, please return \"None\"; "
-    "otherwise, return the corresponding concept ID in the following format:\n"
-    # "reason: <one-sentence reasoning about entity linking>\n"
-    "answer: <concept ID or None>\n"
-    "confidence: <one of: HIGH, LOW, MEDIUM>\n"
-)
+from utils import prompt, prompt_batch, GROUNDING_PROMPT
+from build_dict import lemmatizer, get_wordnet_pos
 
 
 def get_description(metadata, fields=None):
@@ -43,19 +36,20 @@ def gen_grounding_prompt2(mention, concepts, text, linking_fields=None, examples
         system_prompt += f'Here are some examples:\n' + "\n".join(examples)+ '\n'
 
     if linking_fields is None:
-        linking_fields = ("label", "definition", 'synonyms', 'UMLS synonyms')
+        linking_fields = ("label", "definition", 'synonyms', 'UMLS synonyms') # 'synonyms'
     
     _candidates = []
     for i, concept in enumerate(concepts):
         _candidates.append(f'ID: {concept["id"]}')
         _candidates.append(get_description(concept, linking_fields) + "\n")
 
-    system_prompt += 'Below are the concepts:\n\n' +  "\n".join(f'{c}' for c in _candidates)
-    # system_prompt += '\nBelow are the text:\n\n' +  text
+    system_prompt += '\nBelow are the concepts:\n\n' +  "\n".join(f'{c}' for c in _candidates)
+    # system_prompt += '\nBelow are the context:\n\n' +  text
     # 'If the chosen concept is broader or narrower than the given entity, return \"None\".' (broader)
-    mentions = f'\n\n[Entity to link]\n{get_description(mention, fields=["label"])}'
-    # mentions += f'\ncontext: {text}'     
-    return {"mention_to_ground": mentions, "prompt": system_prompt}
+    mentions = f'[Entity to link]\n{get_description(mention, fields=["label"])}'
+    # mentions += f'\ncontext: {text}'
+    # mentions += '\n\nBelow are the concepts:\n\n' +  "\n".join(f'{c}' for c in _candidates)     
+    return {"user": mentions, "system": system_prompt}
 
 
 def gen_grounding_prompt2_llama(mention, concepts, text, linking_fields=None, examples=None):
@@ -77,26 +71,30 @@ def gen_grounding_prompt2_llama(mention, concepts, text, linking_fields=None, ex
     system_prompt += 'Below are the concepts:\n\n' +  "\n".join(f'{c}' for c in _candidates)
     # system_prompt += '\nBelow are the text:\n\n' +  text
     # 'If the chosen concept is broader or narrower than the given entity, return \"None\".' (broader)
-    mentions = f'\n\n[Entity to link]\n{get_description(mention, fields=["label"])}'    
-    return {"mention_to_ground": mentions, "prompt": system_prompt, "real_id": real_id}
+    mentions = f'[Entity to link]\n{get_description(mention, fields=["label"])}'    
+    return {"user": mentions, "system": system_prompt, "real_id": real_id}
 
 
 class bioTag_SapBERT:
-    def __init__(self, model_files, tau_1, tau_2, k, llm, client, seed, cand_path=''):
+    def __init__(self, model_files, ccr, tau_1, tau_2, k, el, api_provider, api_key, seed, use_cache, cand_path=''):
         self.model_type = 'sapbert'
-        self.tokenizer = AutoTokenizer.from_pretrained('cambridgeltl/SapBERT-from-PubMedBERT-fulltext')
-        self.model = AutoModel.from_pretrained('cambridgeltl/SapBERT-from-PubMedBERT-fulltext').cuda()
-        # self.tokenizer = AutoTokenizer.from_pretrained('microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext')
-        # self.model = AutoModel.from_pretrained('microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext').cuda()
-        # self.tokenizer = AutoTokenizer.from_pretrained('../../sapbert/train/tmp/sapbert_umls-hpo')
-        # self.model = AutoModel.from_pretrained('../../sapbert/train/tmp/sapbert_umls-hpo').cuda()
+        # microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext
+        # ../../sapbert/train/tmp/sapbert_umls-hpo
+        self.tokenizer = AutoTokenizer.from_pretrained(ccr)
+        self.model = AutoModel.from_pretrained(ccr).cuda()
         self.index = faiss.index_cpu_to_gpu(faiss.StandardGpuResources(), 0, faiss.read_index(model_files['index']))
         self.index_to_id = json.load(open(model_files['index_to_id'], 'r'))
+        self.index_to_term = json.load(open(model_files['index_to_term'], 'r'))
         self.id_to_concept = json.load(open(model_files['id_to_concept'], 'r'))
+        self.firstword_to_id = json.load(open(model_files['firstword_to_id'], 'r'))
+        self.abbr = json.load(open(model_files['abbr'], 'r'))
         self.llm_range = (tau_2, tau_1)
         self.k = k
-        self.llm = llm
-        self.client = client
+        self.use_cache = use_cache
+        self.cache = {}
+        self.el = el
+        self.api_provider = api_provider
+        self.api_key = api_key
         self.seed = seed
         self.cand_path = cand_path
         self.counter = 0
@@ -118,6 +116,25 @@ class bioTag_SapBERT:
             all_embs = np.concatenate(all_embs, axis=0)
         return all_embs
 
+    def get_concept(self, index):
+        concept = self.id_to_concept[self.index_to_id[index].replace(':', '_')]
+        return concept
+    
+    def get_concept_from_index(self, index):
+        concept = self.id_to_concept[self.index_to_id[index].replace(':', '_')].copy()
+        term = self.index_to_term[index]
+        if concept['label'] == term:
+            return concept
+        synoyms = concept['synonyms'].split(' | ')
+        assert term in synoyms
+        new_synonyms = [concept['label']]
+        for s in synoyms:
+            if s != term:
+                new_synonyms.append(s)
+        concept['label'] = term
+        concept['synonyms'] = ' | '.join(new_synonyms)
+        return concept
+
     def get_cand(self, x, Top_N):
         if not x:
             return {}
@@ -126,7 +143,7 @@ class bioTag_SapBERT:
         D, I = self.index.search(embs, Top_N)
         concepts = {}
         for i in range(len(x)):
-            concepts[i] = [(self.id_to_concept[self.index_to_id[str(I[i][j])].replace(':', '_')], self.index_to_id[str(I[i][j])], float(D[i][j]), str(I[i][j])) for j in range(Top_N)]
+            concepts[i] = [(self.get_concept(str(I[i][j])), self.index_to_id[str(I[i][j])], float(D[i][j]), str(I[i][j])) for j in range(Top_N)]
         return concepts
 
     def predict(self, x, Top_N=3):
@@ -139,10 +156,35 @@ class bioTag_SapBERT:
     def predict_llm(self, x, texts, confidence=('HIGH')):
         self.counter += len(x)
         concepts = self.get_cand(x, self.k)
+        # for i, c in concepts.items():
+        #     if x[i] == 'oral anomalies':
+        #         print(x[i], [(c[j][0]['label'], c[j][0]['id'], c[j][2]) for j in range(self.k)])
         pr = {}
         for i in range(len(x)):
-            if ' ' not in x[i]:
+            if self.use_cache and x[i] in self.cache:
+                concepts[i] = self.cache[x[i]]
                 continue
+            # if ' ' not in x[i]:
+            #     continue
+            if ' ' not in x[i]:
+                # TODO: x[i] may be plural
+                if id:=self.abbr.get(x[i].lower(), ''):
+                    concepts[i] = [(self.id_to_concept[id.replace(':', '_')], id, 1.0)] + concepts[i]
+                    continue
+                tokens = word_tokenize(x[i].strip().lower().replace('-',' - ').replace('/',' / '))
+                if len(tokens) == 1:
+                    if tokens[0] in self.firstword_to_id:
+                        # print(tokens)
+                        id = self.firstword_to_id[tokens[0]][0]
+                        concepts[i] = [(self.id_to_concept[id.replace(':', '_')], id, 1.0)] + concepts[i]
+                        continue
+                    token_pos = nltk.pos_tag(tokens)
+                    lemmas = [lemmatizer.lemmatize(token[0], get_wordnet_pos(token[1])) for token in token_pos]
+                    if lemmas[0] in self.firstword_to_id:
+                        # print(lemmas)
+                        id = self.firstword_to_id[lemmas[0]][0]
+                        concepts[i] = [(self.id_to_concept[id.replace(':', '_')], id, 1.0)] + concepts[i]
+                    continue
             if self.llm_range[0] <= concepts[i][0][2] < self.llm_range[1]:
                 # concepts_ = {}
                 # for k in range(len(concepts[i])):
@@ -151,20 +193,28 @@ class bioTag_SapBERT:
                 #     if len(concepts_) == self.k:
                 #         break
                 # concepts_ = list(concepts_.values())
+                # key: (concepts[i][k][0]['id'], concepts[i][k][0]['label'])
                 concepts_ = list({concepts[i][k][0]['id']: concepts[i][k][0] for k in range(self.k)}.values())
                 pr[i] = gen_grounding_prompt2({'label': x[i]}, concepts_, texts[i])
-        # print(pr)
-        responses = prompt(pr, self.llm, self.client, self.seed)
-        lines = ''
+        # print([pr[i] for i in pr if x[i] == 'thumb anomalies'])
+        responses = prompt(pr, self.el, self.api_provider, self.api_key, self.seed) if self.el != 'none' else {}
+        # lines = ''
+        anns = []
         for i in range(len(x)):
             if i in responses:
                 uri = re.findall('(?<=answer: )[^\n]+', responses[i])
                 conf = re.findall('(?<=confidence: )[A-Z]+', responses[i])
                 if uri and conf and conf[0] in confidence and 'none' not in uri[0].lower():
-                    lines += f"{uri[0].strip().replace('_', ':')}|{-1.0}" + '\n'
-                    continue
-            lines += '\t'.join([f'{concepts[i][j][1]}|{concepts[i][j][2]}' for j in range(self.k)]) + '\n'
-        return lines
+                    # lines += f"{uri[0].strip().replace('_', ':')}|{-1.0}" + '\n'
+                    # continue
+                    id = uri[0].strip()
+                    concepts[i] = [(self.id_to_concept.get(id, {}), id.replace('_', ':'), -1.0)] + concepts[i]
+            # lines += '\t'.join([f'{concepts[i][j][1]}|{concepts[i][j][2]}' for j in range(self.k)]) + '\n'
+            anns.append([(concepts[i][j][1], concepts[i][j][2]) for j in range(self.k)])
+            if self.use_cache and x[i] not in self.cache:
+                self.cache[x[i]] = concepts[i]
+        # return lines
+        return anns
 
     # TODO: for local inference
     def predict_llm_batch(self, x_batch, texts_batch, confidence=('HIGH')):
@@ -189,7 +239,7 @@ class bioTag_SapBERT:
                 pr_batch[j] = pr
             json.dump(pr_batch, open(self.cand_path + '_pr', 'w'))
             exit(0)
-            responses_batch = prompt_batch(self.cand_path + '_pr', self.llm)
+            responses_batch = prompt_batch(self.cand_path + '_pr', self.el)
 
         lines_batch = []
         for j, x in enumerate(x_batch):

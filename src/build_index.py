@@ -6,6 +6,7 @@ import json
 import faiss
 import argparse
 from dotenv import load_dotenv
+import pandas as pd
 
 
 def get_embs(all_names, tokenizer, model, bs=128):
@@ -40,7 +41,9 @@ def build_index(ontology_dict, tokenizer, model):
         term_to_id.update({syn: main_label for syn in terms})
 
     index_to_id = {i: term_to_id[all_terms[i]] for i in range(len(all_terms))}
+    index_to_term = {i: all_terms[i] for i in range(len(all_terms))}
     json.dump(index_to_id, open(f'{ontology_dict}/index_to_id.json', 'w'))
+    json.dump(index_to_term, open(f'{ontology_dict}/index_to_term.json', 'w'))
     json.dump(term_to_main_label, open(f'{ontology_dict}/term_to_main_label.json', 'w'))
 
     # 🔹 4. 转换为 numpy 数组，并存入 Faiss
@@ -55,7 +58,9 @@ def build_index(ontology_dict, tokenizer, model):
     ids_filtered = open(f'{ontology_dict}/lable.vocab', 'r').read().strip().split('\n')
     indices_filtered = [index for index, id in index_to_id.items() if id in ids_filtered]
     index_to_id_filtered = {i: index_to_id[index] for i, index in enumerate(indices_filtered)}
+    index_to_term_filtered = {i: index_to_term[index] for i, index in enumerate(indices_filtered)}
     json.dump(index_to_id_filtered, open(f'{ontology_dict}/index_to_id_lable.json', 'w'))
+    json.dump(index_to_term_filtered, open(f'{ontology_dict}/index_to_term_lable.json', 'w'))
 
     embs = np.array([faiss_index.reconstruct(i) for i in range(faiss_index.ntotal)])
     embs_filtered = np.array([embs[int(i)] for i in indices_filtered])
@@ -82,6 +87,7 @@ def build_index(ontology_dict, tokenizer, model):
             "label": concept['name'][0],
             "definition": concept['def'],
             "synonyms": list2str([s[0] for s in concept['synonym']]),
+            "xref": concept.get('xref', []),
             "is_a": list2str([c.replace(':', '_') for c in concept['is_a']])
         }
     json.dump(concepts, open(f'{ontology_dict}/id_to_concept.json', 'w'))
@@ -118,16 +124,48 @@ def build_index(ontology_dict, tokenizer, model):
             concepts[id]['UMLS synonyms'] = list2str(new_umls_syns)
         json.dump(concepts, open(f'{ontology_dict}/id_to_concept.json', 'w'))
 
-if __name__ == '__main__':
-    tokenizer = AutoTokenizer.from_pretrained("cambridgeltl/SapBERT-from-PubMedBERT-fulltext")  
-    model = AutoModel.from_pretrained("cambridgeltl/SapBERT-from-PubMedBERT-fulltext").cuda()
-    # tokenizer = AutoTokenizer.from_pretrained('microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext')
-    # model = AutoModel.from_pretrained('microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext').cuda()
-    # tokenizer = AutoTokenizer.from_pretrained('../../sapbert/train/tmp/sapbert_umls-hpo')
-    # model = AutoModel.from_pretrained('../../sapbert/train/tmp/sapbert_umls-hpo').cuda()
+    # def build_lexicons(df):
+    #     df = df[(df["LAT"]=="ENG") & df["STR"].notna()].copy()
+    #     df["STR"] = df["STR"].str.casefold()
+    #     cui2syns = df.groupby("CUI")["STR"].agg(set).to_dict()
+    #     df["SAB_CODE"] = df["SAB"] + ":" + df["CODE"]
+    #     sabcode2syns = df.groupby("SAB_CODE")["STR"].agg(set).to_dict()
+    #     return cui2syns, sabcode2syns
 
+    # def get_xrefs(xrefs, cui2syns, sabcode2syns):
+    #     out = set()
+    #     for x in xrefs:
+    #         sab, code = x.split(":", 1)
+    #         if sab == "UMLS":
+    #             out |= set(cui2syns.get(code, ()))
+    #         else:
+    #             out |= set(sabcode2syns.get(f"{sab}:{code}", ()))
+    #     return out
+
+    # if ontology_dict == '../dict/HPO':
+    #     cols = ["CUI","LAT","TS","LUI","STT","SUI","ISPREF","AUI","SAUI","SCUI","SDUI","SAB","TTY","CODE","STR","SRL","SUPPRESS","CVF"]
+    #     usecols = ["CUI", "LAT", "SAB", "CODE", "STR"]
+    #     df = pd.read_csv("../data/2024AA/META/MRCONSO.RRF",sep="|",names=cols+["_extra"],dtype=str,usecols=usecols)
+    #     cui2syns, sabcode2syns = build_lexicons(df)
+
+    #     concepts = {id: concept | {'cross-reference synonyms': list2str(get_xrefs(concept['xref'], cui2syns, sabcode2syns))} for id, concept in tqdm(concepts.items())}
+    #     # 去除UMLS重复的id
+    #     for id, concept in concepts.items():
+    #         ori_syns = [concept['label'].lower()] + [s.lower() for s in concept['synonyms'].split(' | ')]
+    #         new_xref_syns = [c for c in concept['cross-reference synonyms'].split(' | ') if c.lower() not in ori_syns]
+    #         concepts[id]['cross-reference synonyms'] = list2str(new_xref_syns)
+    #     json.dump(concepts, open(f'{ontology_dict}/id_to_concept.json', 'w'))
+
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--ontology_dict', type=str, required=True)
+    parser.add_argument('--ccr', help="candidate concept retrieval model", type=str, default='cambridgeltl/SapBERT-from-PubMedBERT-fulltext')
     args = parser.parse_args()
+
+    # microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext
+    # ../../sapbert/train/tmp/sapbert_umls-hpo
+    tokenizer = AutoTokenizer.from_pretrained(args.ccr)  
+    model = AutoModel.from_pretrained(args.ccr).cuda()
 
     build_index(args.ontology_dict, tokenizer, model)
