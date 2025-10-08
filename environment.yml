@@ -1,4 +1,4 @@
-name: autopcr2
+name: autopcr
 channels:
   - pytorch
   - nvidia
