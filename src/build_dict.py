@@ -328,11 +328,13 @@ def alt_hpo(hpo_obo,outpath):
 
 if __name__=="__main__":
     
-    parser = argparse.ArgumentParser(description='build ontogoly dictionary, python Build_dict.py -i infile -o outpath -r rootnode')
-    parser.add_argument('--input', '-i', help="input the ontology .obo file",default='../ontology/hp_202204.obo') # hp.obo CTD_diseases.obo chebi.obo
-    parser.add_argument('--output', '-o', help="the output path of dictionary",default='../dict/')
-    parser.add_argument('--rootnode','-r',help="input the root node of the ontogyly",nargs='+', default=['HP:0000118'])#HP:0000118 MESH:C CHEBI:24431
+    parser = argparse.ArgumentParser(description='build ontology dictionary, python Build_dict.py -i infile -o outpath -r rootnode')
+    parser.add_argument('--input', '-i', help='input the ontology .obo file', default='../ontology/hp_20240208.obo') # hp_202204.obo CTD_diseases.obo chebi.obo
+    parser.add_argument('--output', '-o', help='the output path of dictionary', default='../dict/HPO') # ../dict
+    parser.add_argument('--rootnode', '-r', help='input the root node of the ontology', nargs='+', default=['HP:0000118']) # HP:0000118 MESH:C CHEBI:24431
     args = parser.parse_args()
+
+    args.output += '/'
     if not os.path.exists(args.output):
         os.makedirs(args.output)
 

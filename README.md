@@ -29,19 +29,20 @@ cd src
 
 ### Build the ontology dictionary
 Parameters:
-- --input, -i, help="ontology .obo file"
-- --output, -o, help="output folder of the dictionary"
-- --rootnode, -r, help="root node of the ontology"
+- --input, -i, help='input the ontology .obo file', default='../ontology/hp_20240208.obo'
+- --output, -o, help='the output path of dictionary', default='../dict/HPO'
+- --rootnode, -r, help='input the root node of the ontology', nargs='+', default=['HP:0000118']
 
 Examples:
 ```bash
-python build_dict.py -i ../ontology/hp_20240208.obo -o ../dict/HPO/ -r HP:0000118
-python build_dict.py -i ../ontology/CTD_diseases.obo -o ../dict/MEDIC/ -r MESH:C
+python build_dict.py -i ../ontology/hp_20240208.obo  -o ../dict/HPO   -r HP:0000118
+python build_dict.py -i ../ontology/CTD_diseases.obo -o ../dict/MEDIC -r MESH:C
 ```
 
 ### Build the ontology index using SapBERT
 Parameters:
-- --ontology_dict, help="folder of the ontology dictionary"
+- --ontology_dict, help='folder of the ontology dictionary', type=str, required=True
+- --ccr, help='candidate concept retrieval model', type=str, default='cambridgeltl/SapBERT-from-PubMedBERT-fulltext'
 
 Examples:
 ```bash
@@ -50,26 +51,31 @@ python build_index.py --ontology_dict ../dict/MEDIC
 ```
 
 ### Run experiments
-Paramaters:
-- --ontology_dict, help="folder of the ontology dictionary", required=True
-- --corpus, -c, help="input corpus dataset", required=True
-- --output, -o, help="output prediction file", required=True
-- --ee, help="entity extraction method", choices=["rule", "neural", "neural+", "neural++"], required=True
-- --tau_1, help="high-confidence threshold for candidate concept retrieval", default=0.95
-- --tau_2, help="low-confidence threshold for candidate concept retrieval", default=0.85
-- --k, help="number of retrieved candidate concepts", default=5
-- --llm, help="which llm (OpenAI or Groq models) to use for entity linking, or skip for no entity linking"
-- --api_key, help="OpenAI or Groq api key, or load from .env"
-- --seed, help="seed for llm", default=0
-- --only_longest, help="whether the output only keeps the longest nested entity", action="store_true"
-- --abbr_recog, help="whether to identify abbreviations", action="store_true"
+- --ontology_dict, help='folder of the ontology dictionary', type=str, required=True
+- --corpus, -c, help='input corpus dataset', type=str, required=True
+- --output, -o, help='output prediction file', type=str, required=True
+- --doc_id, help='specific docs to test', nargs='*', type=str
+- --ee, help='entity extraction method (rule-based or neural variants)', choices=['rule', 'neural', 'neural+', 'neural++'], type=str, default='neural++'
+- --abbr_recog, help='whether to identify abbreviations', action='store_true'
+- --ccr, help='candidate concept retrieval model', type=str, default='cambridgeltl/SapBERT-from-PubMedBERT-fulltext'
+- --tau_1, help='high-confidence threshold for candidate concept retrieval', type=float, default=0.95
+- --tau_2, help='low-confidence threshold for candidate concept retrieval', type=float, default=0.85
+- --k, help='number of retrieved candidate concepts', type=int, default=5
+
+- --el, help='entity linking llm backend; "none" to disable', type=str, default='gpt-4o-mini'
+- --api_provider, help='api provider', choices=['openai', 'groq', 'together'], type=str, default='openai'
+- --api_key, help='api key, or load from .env', type=str
+- --seed, help='seed for llm', type=int, default=0
+- --use_cache, help='whether to cache results', action='store_true'
+
+- --only_longest, help='whether the output only keeps the longest nested entity', action='store_true'
 
 Examples:
 ```bash
-python HPO_evaluation.py --ontology_dict ../dict/HPO   -c BIOC-GS  -o ../results/bioc-gs.tsv --only_longest
+python HPO_evaluation.py --ontology_dict ../dict/HPO   -c BIOC-GS  -o ../results/bioc-gs.tsv  --only_longest
 python HPO_evaluation.py --ontology_dict ../dict/HPO   -c GSC-2024 -o ../results/gsc-2024.tsv
-python HPO_evaluation.py --ontology_dict ../dict/HPO   -c ID-68    -o ../results/id-68.tsv --only_longest
-python HPO_evaluation.py --ontology_dict ../dict/MEDIC -c NCBI     -o ../results/ncbi.tsv --only_longest --abbr_recog
+python HPO_evaluation.py --ontology_dict ../dict/HPO   -c ID-68    -o ../results/id-68.tsv    --only_longest
+python HPO_evaluation.py --ontology_dict ../dict/MEDIC -c NCBI     -o ../results/ncbi.tsv     --only_longest --abbr_recog
 ```
 
 ## 📚 Acknowledgements

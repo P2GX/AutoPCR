@@ -159,8 +159,8 @@ def build_index(ontology_dict, tokenizer, model):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ontology_dict', type=str, required=True)
-    parser.add_argument('--ccr', help="candidate concept retrieval model", type=str, default='cambridgeltl/SapBERT-from-PubMedBERT-fulltext')
+    parser.add_argument('--ontology_dict', help='folder of the ontology dictionary', type=str, required=True)
+    parser.add_argument('--ccr', help='candidate concept retrieval model', type=str, default='cambridgeltl/SapBERT-from-PubMedBERT-fulltext')
     args = parser.parse_args()
 
     # microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext

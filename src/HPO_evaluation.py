@@ -235,26 +235,26 @@ if __name__=="__main__":
     
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--ontology_dict', help="folder of the ontology dictionary", type=str, required=True)
-    parser.add_argument('--corpus', '-c', help="input corpus dataset", type=str, required=True)
-    parser.add_argument('--output', '-o', help="output prediction file", type=str, required=True)
-    parser.add_argument('--doc_id', help="specific docs to test", nargs='*', type=str)
+    parser.add_argument('--ontology_dict', help='folder of the ontology dictionary', type=str, required=True)
+    parser.add_argument('--corpus', '-c', help='input corpus dataset', type=str, required=True)
+    parser.add_argument('--output', '-o', help='output prediction file', type=str, required=True)
+    parser.add_argument('--doc_id', help='specific docs to test', nargs='*', type=str)
 
-    parser.add_argument('--ee', help="entity extraction method", choices=['rule', 'neural', 'neural+', 'neural++'], type=str, default='neural++')
-    parser.add_argument('--abbr_recog', help="whether to identify abbreviations", action='store_true')
+    parser.add_argument('--ee', help='entity extraction method', choices=['rule', 'neural', 'neural+', 'neural++'], type=str, default='neural++')
+    parser.add_argument('--abbr_recog', help='whether to identify abbreviations', action='store_true')
 
-    parser.add_argument('--ccr', help="candidate concept retrieval model", type=str, default='cambridgeltl/SapBERT-from-PubMedBERT-fulltext')
-    parser.add_argument('--tau_1', help="high-confidence threshold for candidate concept retrieval", type=float, default=0.95)
-    parser.add_argument('--tau_2', help="low-confidence threshold for candidate concept retrieval", type=float, default=0.85)
+    parser.add_argument('--ccr', help='candidate concept retrieval model', type=str, default='cambridgeltl/SapBERT-from-PubMedBERT-fulltext')
+    parser.add_argument('--tau_1', help='high-confidence threshold for candidate concept retrieval', type=float, default=0.95)
+    parser.add_argument('--tau_2', help='low-confidence threshold for candidate concept retrieval', type=float, default=0.85)
     parser.add_argument('--k', help='number of retrieved candidate concepts', type=int, default=5)
 
-    parser.add_argument('--el', help="entity linking llm backend; 'none' to disable", type=str, default='gpt-4o-mini')
-    parser.add_argument('--api_provider', help="api provider", choices=["openai", "groq", "together"], type=str, default='openai')
-    parser.add_argument('--api_key', help="api key, or load from .env", type=str)
-    parser.add_argument('--seed', help="seed for llm", type=int, default=0)
+    parser.add_argument('--el', help='entity linking llm backend; "none" to disable', type=str, default='gpt-4o-mini')
+    parser.add_argument('--api_provider', help='api provider', choices=['openai', 'groq', 'together'], type=str, default='openai')
+    parser.add_argument('--api_key', help='api key, or load from .env', type=str)
+    parser.add_argument('--seed', help='seed for llm', type=int, default=0)
     parser.add_argument('--use_cache', help='whether to cache results', action='store_true')
 
-    parser.add_argument('--only_longest', help="whether the output only keeps the longest nested entity", action='store_true')
+    parser.add_argument('--only_longest', help='whether the output only keeps the longest nested entity', action='store_true')
     
     args = parser.parse_args()
 
