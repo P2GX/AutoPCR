@@ -51,6 +51,7 @@ python build_index.py --ontology_dict ../dict/MEDIC
 ```
 
 ### Run experiments
+Parameters:
 - --ontology_dict, help='folder of the ontology dictionary', type=str, required=True
 - --corpus, -c, help='input corpus dataset', type=str, required=True
 - --output, -o, help='output prediction file', type=str, required=True
