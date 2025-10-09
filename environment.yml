@@ -410,7 +410,7 @@ dependencies:
       - thinc==8.2.5
       - threadpoolctl==3.6.0
       - tokenizers==0.21.4
-      - torch==2.8.0
+      # - torch==2.8.0
       - torch-struct==0.5
       - transformers==4.49.0
       - triton==3.4.0
