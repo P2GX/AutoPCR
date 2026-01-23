@@ -1,2 +1,2 @@
-from .llm import prompt, prompt_batch
-from .prompts import GROUNDING_PROMPT
+from .llm import prompt
+from .prompts import GROUNDING_PROMPT, GROUNDING_PROMPT_NOCONF

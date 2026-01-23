@@ -12,7 +12,7 @@ import torch
 from nltk.tokenize import word_tokenize
 import nltk
 
-from utils import prompt, prompt_batch, GROUNDING_PROMPT
+from utils import prompt, GROUNDING_PROMPT
 from build_dict import lemmatizer, get_wordnet_pos
 
 

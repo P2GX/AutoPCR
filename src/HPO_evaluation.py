@@ -5,7 +5,6 @@ import os
 import time
 import logging
 from tqdm import tqdm
-from nn_model2 import bioTag_SapBERT
 from evaluate import GSCplus_corpus
 from ee import process_text2phrases_pbert, process_text2phrases_benepar, process_text2phrases_abbr
 import json
@@ -240,7 +239,7 @@ if __name__=="__main__":
     parser.add_argument('--output', '-o', help='output prediction file', type=str, required=True)
     parser.add_argument('--doc_id', help='specific docs to test', nargs='*', type=str)
 
-    parser.add_argument('--ee', help='entity extraction method', choices=['rule', 'neural', 'neural+', 'neural++'], type=str, default='neural++')
+    parser.add_argument('--ee', help='entity extraction method: (1) "rule": PhenoTagger-style rule-based, (2) "neural": BioNER, (3) "neural+": BioNER + benepar, (4) "neural++": BioNER + benepar + coordination decomposition', choices=['rule', 'neural', 'neural+', 'neural++'], type=str, default='neural++')
     parser.add_argument('--abbr_recog', help='whether to identify abbreviations', action='store_true')
 
     parser.add_argument('--ccr', help='candidate concept retrieval model', type=str, default='cambridgeltl/SapBERT-from-PubMedBERT-fulltext')
@@ -248,9 +247,10 @@ if __name__=="__main__":
     parser.add_argument('--tau_2', help='low-confidence threshold for candidate concept retrieval', type=float, default=0.85)
     parser.add_argument('--k', help='number of retrieved candidate concepts', type=int, default=5)
 
-    parser.add_argument('--el', help='entity linking llm backend; "none" to disable', type=str, default='gpt-4o-mini')
-    parser.add_argument('--api_provider', help='api provider', choices=['openai', 'groq', 'together'], type=str, default='openai')
-    parser.add_argument('--api_key', help='api key, or load from .env', type=str)
+    parser.add_argument('--el', help='entity linking llm backend; "none" to disable', type=str, default='Qwen/Qwen3-Next-80B-A3B-Instruct')
+    parser.add_argument('--api_provider', help='api provider for llm inference', choices=['openai', 'groq', 'together', 'vllm'], type=str, default='together')
+    parser.add_argument('--api_key', help='api key for api provider, base url if api provider is vllm, or loaded from .env (e.g., TOGETHER_API_KEY) if not provided', type=str)
+    parser.add_argument('--use_finetuning_prompt', help='simplified prompt for finetuned llm', action='store_true')
     parser.add_argument('--seed', help='seed for llm', type=int, default=0)
     parser.add_argument('--use_cache', help='whether to cache results', action='store_true')
 
@@ -277,6 +277,11 @@ if __name__=="__main__":
     # output_dir, name = os.path.split(args.output)
     # base_name, ext = os.path.splitext(name)
     # cand_path = os.path.join(output_dir, base_name + '.json')
+
+    if args.use_finetuning_prompt:
+        from nn_model3 import bioTag_SapBERT
+    else:
+        from nn_model2 import bioTag_SapBERT
 
     nn_model=bioTag_SapBERT(vocabfiles, args.ccr, args.tau_1, args.tau_2, args.k, args.el, args.api_provider, args.api_key, args.seed, args.use_cache)
     

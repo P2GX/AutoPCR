@@ -1,12 +1,14 @@
 import json
 import subprocess
 import os
+import httpx
 from dotenv import load_dotenv
 from openai import OpenAI
 from groq import Groq
 from together import Together
+from concurrent.futures import ThreadPoolExecutor
 
-load_dotenv(os.path.dirname(__file__)+"/../.env")
+load_dotenv(os.path.dirname(__file__)+'/../.env')
 
 
 def prompt(pr, model, api_provider='openai', api_key=None, seed=0, max_tokens=32):
@@ -19,8 +21,28 @@ def prompt(pr, model, api_provider='openai', api_key=None, seed=0, max_tokens=32
             prompt.client = Groq(api_key=api_key)
         elif api_provider == 'together':
             prompt.client = Together(api_key=api_key)
+        elif api_provider == 'vllm':
+            prompt.client = OpenAI(api_key='EMPTY', base_url=api_key, http_client=httpx.Client(trust_env=False))
         prompt.api_key = api_key
     client = prompt.client
+
+    if api_provider == 'vllm':
+        vllm_concurrency = 16
+        def one(item):
+            i, p = item
+            r = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {'role': 'system', 'content': p['system']},
+                    {'role': 'user',   'content': p['user']},
+                ],
+                temperature=0,
+                seed=seed,
+                max_tokens=max_tokens,
+            )
+            return i, r.choices[0].message.content
+        with ThreadPoolExecutor(max_workers=vllm_concurrency) as pool:
+            return dict(pool.map(one, pr.items()))
 
     responses = {}
     for i in pr:
@@ -35,16 +57,4 @@ def prompt(pr, model, api_provider='openai', api_key=None, seed=0, max_tokens=32
                 max_tokens=max_tokens
             )
         responses[i] = response.choices[0].message.content
-    return responses
-
-
-def prompt_batch(pr_batch_path, model):
-    responses = {}
-    if model == 'llama':
-        command = f'mamba run -n vllm python llama_infer.py --pr_batch_path {pr_batch_path}'
-        result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
-        if result.returncode != 0:
-            print(f"Error: {result.stderr}")
-            return {"error": "An error occurred during the execution", "details": result.stderr}
-        responses = json.load(open(pr_batch_path + '_res', 'r')) # json.loads(result.stdout)
     return responses

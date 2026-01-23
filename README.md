@@ -1,7 +1,7 @@
 # AutoPCR: Automated Phenotype Concept Recognition by Prompting
 
 
-## 🚀 Installation
+## 🚀 Installation (Linux)
 ```bash
 conda env create -f environment.yml
 ```
@@ -56,16 +56,17 @@ Parameters:
 - --corpus, -c, help='input corpus dataset', type=str, required=True
 - --output, -o, help='output prediction file', type=str, required=True
 - --doc_id, help='specific docs to test', nargs='*', type=str
-- --ee, help='entity extraction method (rule-based or neural variants)', choices=['rule', 'neural', 'neural+', 'neural++'], type=str, default='neural++'
+- --ee, help='entity extraction method: (1) "rule": PhenoTagger-style rule-based, (2) "neural": BioNER, (3) "neural+": BioNER + benepar, (4) "neural++": BioNER + benepar + coordination decomposition', choices=['rule', 'neural', 'neural+', 'neural++'], type=str, default='neural++'
 - --abbr_recog, help='whether to identify abbreviations', action='store_true'
 - --ccr, help='candidate concept retrieval model', type=str, default='cambridgeltl/SapBERT-from-PubMedBERT-fulltext'
 - --tau_1, help='high-confidence threshold for candidate concept retrieval', type=float, default=0.95
 - --tau_2, help='low-confidence threshold for candidate concept retrieval', type=float, default=0.85
 - --k, help='number of retrieved candidate concepts', type=int, default=5
 
-- --el, help='entity linking llm backend; "none" to disable', type=str, default='gpt-4o-mini'
-- --api_provider, help='api provider', choices=['openai', 'groq', 'together'], type=str, default='openai'
-- --api_key, help='api key, or load from .env', type=str
+- --el, help='entity linking llm backend; "none" to disable', type=str, default='Qwen/Qwen3-Next-80B-A3B-Instruct'
+- --api_provider, help='api provider for llm inference', choices=['openai', 'groq', 'together', 'vllm'], type=str, default='together'
+- --api_key, help='api key for api provider, api url if api provider is vllm, or loaded from .env (e.g., TOGETHER_API_KEY) if not provided', type=str
+- --use_finetuning_prompt, help='simplified prompt for finetuned llm', action='store_true'
 - --seed, help='seed for llm', type=int, default=0
 - --use_cache, help='whether to cache results', action='store_true'
 
@@ -78,6 +79,17 @@ python HPO_evaluation.py --ontology_dict ../dict/HPO   -c GSC-2024 -o ../results
 python HPO_evaluation.py --ontology_dict ../dict/HPO   -c ID-68    -o ../results/id-68.tsv    --only_longest
 python HPO_evaluation.py --ontology_dict ../dict/MEDIC -c NCBI     -o ../results/ncbi.tsv     --only_longest --abbr_recog
 ```
+
+### (Optional) Fine-tune the entity linker
+First, build the training data:
+```bash
+python build_training_dataset.py
+```
+Then, install [unsloth](https://unsloth.ai/docs/get-started/install) in a new environment and use it to fine-tune the entity linker:
+```bash
+python unsloth_finetune_30b.py
+```
+To use the fine-tuned model, you may want to serve it using vllm and additionally set "--api_provider vllm --api_key <Your_API_URL> --use_finetuning_prompt" in the last step. A fine-tuned model is also provided [here](https://huggingface.co/yctao/AutoPCR_entitylinker).
 
 ## 📚 Acknowledgements
 This project is adapted in part from the following repositories:

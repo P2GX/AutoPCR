@@ -10,3 +10,5 @@ results/*
 dict/
 ontology/
 data/corpus/
+*.sif
+archive/
