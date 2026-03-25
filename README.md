@@ -91,6 +91,10 @@ python unsloth_finetune_30b.py
 ```
 To use the fine-tuned model, you may want to serve it using vllm and additionally set "--api_provider vllm --api_key <Your_API_URL> --use_finetuning_prompt" in the last step. A fine-tuned model is also provided [here](https://huggingface.co/yctao/AutoPCR_entitylinker).
 
+### Pre-computed results
+We provide the pre-computed results of AutoPCR in the `results/submission/` folder and those of baselines in the [Google Drive](https://drive.google.com/drive/folders/18UMDsRJi5ELhb-FNAEsUjLy5-ZwzFhP_?usp=sharing).
+
+
 ## 📚 Acknowledgements
 This project is adapted in part from the following repositories:
 - [PhenoTagger](https://github.com/ncbi-nlp/PhenoTagger)

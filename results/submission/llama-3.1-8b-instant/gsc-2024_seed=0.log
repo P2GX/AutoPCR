@@ -1,0 +1,18 @@
+2025-10-01 23:34:24,729 - INFO - pre hpo obo no this id: 543	562	palmar/plantar pits	HP:0010612 and HP:0010610	-1.0 HP:0010612 and HP:0010610
+2025-10-01 23:34:24,863 - INFO - pre hpo obo no this id: 534	581	sensorineural, conductive or mixed hearing loss	HP:0000407 and HP:0000410	-1.0 HP:0000407 and HP:0000410
+2025-10-01 23:34:24,925 - INFO - pre hpo obo no this id: 265	284	palmar/plantar pits	HP:0010612 and HP:0010610	-1.0 HP:0010612 and HP:0010610
+2025-10-01 23:34:24,929 - INFO - pre hpo obo no this id: 1061	1089	Palmar pits and plantar pits	HP:0010610, HP:0010612	-1.0 HP:0010610, HP:0010612
+2025-10-01 23:34:25,158 - INFO - ......document level evaluation:......
+2025-10-01 23:34:25,158 - INFO - file num: 206
+2025-10-01 23:34:25,158 - INFO - 1416 1402 1126
+2025-10-01 23:34:25,158 - INFO - miP=0.80314, miR=0.79520, miF=0.79915
+2025-10-01 23:34:25,158 - INFO - maP=0.78133, maR=0.78639, maF=0.78385
+2025-10-01 23:34:25,181 - INFO - pmid: 6741990, multiple pre matches: ['135', '147', 'HP:0001627']
+2025-10-01 23:34:25,184 - INFO - pmid: 7450780, multiple gold matches: ['325', '349', 'HP:0000303']
+2025-10-01 23:34:25,196 - INFO - ......memtion level evaluation:......
+2025-10-01 23:34:25,196 - INFO - 2034 2032
+2025-10-01 23:34:25,196 - INFO - NER P_s=0.81152, R_s=0.78958, F_s=0.80040
+2025-10-01 23:34:25,196 - INFO - NER P_r=0.97244, R_r=0.89036, F_r=0.92959
+2025-10-01 23:34:25,196 - INFO - NEN P_s=0.74606, R_s=0.74533, F_s=0.74570
+2025-10-01 23:34:25,196 - INFO - NEN P_r=0.80020, R_r=0.79941, F_r=0.79980
+2025-10-01 23:34:25,209 - INFO - GSC-2024 done: 234.27800679206848

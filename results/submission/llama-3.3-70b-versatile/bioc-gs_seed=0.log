@@ -1,0 +1,14 @@
+2025-10-02 00:10:08,071 - INFO - Retrying request to /openai/v1/chat/completions in 0.432264 seconds
+2025-10-02 00:10:54,279 - INFO - pre hpo obo no this id: 0	44	CHEST: wide spaced nipples; inverted nipples	HP:0003186, HP:0006610	-1.0 HP:0003186, HP:0006610
+2025-10-02 00:10:54,347 - INFO - ......document level evaluation:......
+2025-10-02 00:10:54,347 - INFO - file num: 382
+2025-10-02 00:10:54,347 - INFO - 604 490 399
+2025-10-02 00:10:54,347 - INFO - miP=0.81429, miR=0.66060, miF=0.72943
+2025-10-02 00:10:54,347 - INFO - maP=0.74254, maR=0.68835, maF=0.71442
+2025-10-02 00:10:54,352 - INFO - ......memtion level evaluation:......
+2025-10-02 00:10:54,353 - INFO - 607 493
+2025-10-02 00:10:54,353 - INFO - NER P_s=0.76673, R_s=0.61285, F_s=0.68121
+2025-10-02 00:10:54,353 - INFO - NER P_r=0.96146, R_r=0.81384, F_r=0.88151
+2025-10-02 00:10:54,353 - INFO - NEN P_s=0.72008, R_s=0.58484, F_s=0.64545
+2025-10-02 00:10:54,353 - INFO - NEN P_r=0.81136, R_r=0.65898, F_r=0.72727
+2025-10-02 00:10:54,356 - INFO - BIOC-GS done: 117.48073172569275

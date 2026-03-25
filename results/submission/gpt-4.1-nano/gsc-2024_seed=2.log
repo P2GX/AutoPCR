@@ -1,0 +1,15 @@
+2025-10-01 19:16:16,156 - INFO - pre hpo obo no this id: 527	619	multiple central nervous system tumors of various types--mainly, bilateral acoustic neuromas	HP:9589	-1.0 HP:9589
+2025-10-01 19:16:16,405 - INFO - ......document level evaluation:......
+2025-10-01 19:16:16,405 - INFO - file num: 206
+2025-10-01 19:16:16,405 - INFO - 1416 1303 1112
+2025-10-01 19:16:16,405 - INFO - miP=0.85342, miR=0.78531, miF=0.81795
+2025-10-01 19:16:16,405 - INFO - maP=0.83899, maR=0.78796, maF=0.81267
+2025-10-01 19:16:16,424 - INFO - pmid: 6741990, multiple pre matches: ['135', '147', 'HP:0001627']
+2025-10-01 19:16:16,427 - INFO - pmid: 7450780, multiple gold matches: ['325', '349', 'HP:0000303']
+2025-10-01 19:16:16,437 - INFO - ......memtion level evaluation:......
+2025-10-01 19:16:16,437 - INFO - 2034 1910
+2025-10-01 19:16:16,437 - INFO - NER P_s=0.84764, R_s=0.77729, F_s=0.81094
+2025-10-01 19:16:16,437 - INFO - NER P_r=0.97696, R_r=0.87561, F_r=0.92352
+2025-10-01 19:16:16,437 - INFO - NEN P_s=0.78901, R_s=0.74090, F_s=0.76420
+2025-10-01 19:16:16,437 - INFO - NEN P_r=0.84503, R_r=0.79351, F_r=0.81846
+2025-10-01 19:16:16,445 - INFO - GSC-2024 done: 607.0038561820984

@@ -1,0 +1,18 @@
+2025-10-02 00:21:53,498 - INFO - Retrying request to /openai/v1/chat/completions in 0.437515 seconds
+2025-10-02 00:22:36,699 - INFO - Retrying request to /openai/v1/chat/completions in 0.428907 seconds
+2025-10-02 00:24:34,283 - INFO - pre hpo obo no this id: 802	826	leukemia and/or lymphoma	MESH:D007938, MESH:D008223	-1.0 MESH:D007938, MESH:D008223
+2025-10-02 00:24:34,392 - INFO - ......document level evaluation:......
+2025-10-02 00:24:34,392 - INFO - file num: 100
+2025-10-02 00:24:34,392 - INFO - 336 424 258
+2025-10-02 00:24:34,392 - INFO - miP=0.60849, miR=0.76786, miF=0.67895
+2025-10-02 00:24:34,392 - INFO - maP=0.64315, maR=0.81057, maF=0.71722
+2025-10-02 00:24:34,396 - INFO - pmid: 9467011, multiple gold matches: ['710', '765', 'MESH:D006223']
+2025-10-02 00:24:34,398 - INFO - pmid: 9506545, multiple pre matches: ['304', '327', 'MESH:D020754']
+2025-10-02 00:24:34,405 - INFO - pmid: 9448273, multiple gold matches: ['123', '152', 'MESH:D006623']
+2025-10-02 00:24:34,411 - INFO - ......memtion level evaluation:......
+2025-10-02 00:24:34,411 - INFO - 979 1143
+2025-10-02 00:24:34,411 - INFO - NER P_s=0.62292, R_s=0.73340, F_s=0.67366
+2025-10-02 00:24:34,411 - INFO - NER P_r=0.81277, R_r=0.93463, F_r=0.86945
+2025-10-02 00:24:34,411 - INFO - NEN P_s=0.56168, R_s=0.65577, F_s=0.60509
+2025-10-02 00:24:34,411 - INFO - NEN P_r=0.65879, R_r=0.76915, F_r=0.70971
+2025-10-02 00:24:34,420 - INFO - NCBI done: 201.00285458564758

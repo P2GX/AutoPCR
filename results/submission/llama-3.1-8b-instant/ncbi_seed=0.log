@@ -1,0 +1,19 @@
+2025-10-01 23:40:20,895 - INFO - Retrying request to /openai/v1/chat/completions in 0.394508 seconds
+2025-10-01 23:41:30,155 - INFO - pre hpo obo no this id: 98	121	two hamartoma syndromes	MESH:D006223, MESH:D054975	-1.0 MESH:D006223, MESH:D054975
+2025-10-01 23:41:30,156 - INFO - pre hpo obo no this id: 649	672	two hamartoma syndromes	MESH:D006223, MESH:D054975	-1.0 MESH:D006223, MESH:D054975
+2025-10-01 23:41:30,191 - INFO - pre hpo obo no this id: 110	149	X-linked dilated cardiomyopathy (XLDCM)	MESH:C580047, OMIM:302045, MESH:C564721	-1.0 MESH:C580047, OMIM:302045, MESH:C564721
+2025-10-01 23:41:30,332 - INFO - ......document level evaluation:......
+2025-10-01 23:41:30,332 - INFO - file num: 100
+2025-10-01 23:41:30,332 - INFO - 336 453 259
+2025-10-01 23:41:30,332 - INFO - miP=0.57174, miR=0.77083, miF=0.65653
+2025-10-01 23:41:30,332 - INFO - maP=0.59679, maR=0.81189, maF=0.68792
+2025-10-01 23:41:30,336 - INFO - pmid: 9467011, multiple gold matches: ['710', '765', 'MESH:D006223']
+2025-10-01 23:41:30,338 - INFO - pmid: 9506545, multiple pre matches: ['304', '327', 'MESH:D020754']
+2025-10-01 23:41:30,345 - INFO - pmid: 9448273, multiple gold matches: ['123', '152', 'MESH:D006623']
+2025-10-01 23:41:30,351 - INFO - ......memtion level evaluation:......
+2025-10-01 23:41:30,351 - INFO - 979 1153
+2025-10-01 23:41:30,351 - INFO - NER P_s=0.60538, R_s=0.71910, F_s=0.65736
+2025-10-01 23:41:30,351 - INFO - NER P_r=0.80746, R_r=0.93361, F_r=0.86596
+2025-10-01 23:41:30,351 - INFO - NEN P_s=0.54900, R_s=0.64658, F_s=0.59381
+2025-10-01 23:41:30,351 - INFO - NEN P_r=0.64527, R_r=0.75996, F_r=0.69794
+2025-10-01 23:41:30,358 - INFO - NCBI done: 237.97929406166077

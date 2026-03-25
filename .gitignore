@@ -6,7 +6,8 @@
 **/__pycache__
 **/.DS_Store
 results/*
-!results/.gitkeep
+!results/submission
+!results/submission/**
 dict/
 ontology/
 data/corpus/
