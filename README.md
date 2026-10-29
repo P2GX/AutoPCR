@@ -46,8 +46,8 @@ Parameters:
 
 Examples:
 ```bash
-python build_index.py --ontology_dict ../dict/HPO
-python build_index.py --ontology_dict ../dict/MEDIC
+python _build_index.py --ontology_dict ../dict/HPO
+python _build_index.py --ontology_dict ../dict/MEDIC
 ```
 
 ### Run experiments
@@ -74,10 +74,10 @@ Parameters:
 
 Examples:
 ```bash
-python HPO_evaluation.py --ontology_dict ../dict/HPO   -c BIOC-GS  -o ../results/bioc-gs.tsv  --only_longest
-python HPO_evaluation.py --ontology_dict ../dict/HPO   -c GSC-2024 -o ../results/gsc-2024.tsv
-python HPO_evaluation.py --ontology_dict ../dict/HPO   -c ID-68    -o ../results/id-68.tsv    --only_longest
-python HPO_evaluation.py --ontology_dict ../dict/MEDIC -c NCBI     -o ../results/ncbi.tsv     --only_longest --abbr_recog
+python _extractor.py --ontology_dict ../dict/HPO   -c BIOC-GS  -o ../results/bioc-gs.tsv  --only_longest
+python _extractor.py --ontology_dict ../dict/HPO   -c GSC-2024 -o ../results/gsc-2024.tsv
+python _extractor.py --ontology_dict ../dict/HPO   -c ID-68    -o ../results/id-68.tsv    --only_longest
+python _extractor.py --ontology_dict ../dict/MEDIC -c NCBI     -o ../results/ncbi.tsv     --only_longest --abbr_recog
 ```
 
 ### (Optional) Fine-tune the entity linker

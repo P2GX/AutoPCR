@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=77", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autopcr"
+dynamic = ["version"]
+description = "HPO RAG as implemented by Brandon T. Garcia 2025."
+authors = [{ name = "Rouven Reuter" }]
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
+
+# Core: everything needed for LLMClient (OpenAI-compatible endpoint) + FAISS retrieval.
+# Heavy ML stacks (torch, onnxruntime) live in extras so a plain install stays small.
+dependencies = [
+    "nltk>=3.5",
+    "numpy>=2.1",
+    "transformers>=4.4",
+    "faiss-cpu>=1.9",
+    "requests>=2.3",
+    "torch>=2.2",
+    "stanza>=1.1",
+    "spacy>=3.7",
+    "benepar>=0.2",
+    "spacy-curated-transformers>=0.3"
+]
+
+[project.urls]
+homepage = "https://www.smart-monkey.blog/"
+repository = "https://github.com/P2GX/RAG-HPO"
+documentation = "https://github.com/P2GX/RAG-HPO"
+bugtracker = "https://github.com/P2GX/RAG-HPO/issues"
+
+[tool.setuptools]
+packages.find = { where = ["src"] }
+
+[tool.setuptools.package-data]
+rag_hpo = ["data/*.csv"]
+
+[tool.setuptools_scm]
+version_file = "src/autopcr/_version.py"
+
+[tool.pytest.ini_options]
+addopts = "-s"
