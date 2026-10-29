@@ -20,15 +20,23 @@ except LookupError:
     benepar.download(BENEPAR_MODEL)
     clinical_ner_model.add_pipe("benepar", config={"model": BENEPAR_MODEL})
 
-try:
-    abbr_model = spacy.load(SCISPACY_MODEL)
-    abbr_model.add_pipe("abbreviation_detector")
-except OSError:
-    os.system(
-        "pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/en_core_sci_scibert-0.5.4.tar.gz"
-    )
-    abbr_model = spacy.load(SCISPACY_MODEL)
-    abbr_model.add_pipe("abbreviation_detector")
+from functools import lru_cache
+
+SCISPACY_MODEL = "en_core_sci_scibert"
+
+
+@lru_cache(maxsize=1)
+def _abbr_model():
+    try:
+        from scispacy.abbreviation import AbbreviationDetector  # noqa: F401  registers the pipe
+    except ImportError as e:
+        raise ImportError(
+            "detect_abbreviations=True needs scispacy: pip install 'autopcr[abbreviations]' "
+            f"and the {SCISPACY_MODEL} model"
+        ) from e
+    nlp = spacy.load(SCISPACY_MODEL)
+    nlp.add_pipe("abbreviation_detector")
+    return nlp
 
 
 # def generate_spans(sent, tags=['NP', 'UCP', 'NML', 'NX', 'NN', 'NNS', 'NNP', 'NNPS']):
@@ -302,6 +310,6 @@ def process_text2phrases_abbr(text):
             abbr._.long_form.text,
             PhraseItem._toSimpleString(abbr._.long_form),
         )
-        for abbr in abbr_model(text)._.abbreviations
+        for abbr in _abbr_model()(text)._.abbreviations
     ]
     return text, phrases_list, index_map

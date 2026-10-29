@@ -28,6 +28,8 @@ dependencies = [
     "openai >= 3.41",
     "scispacy>=0.6"
 ]
+[project.optional-dependencies]
+abbreviations = ["scispacy>=0.6"]
 
 [project.urls]
 homepage = "https://www.smart-monkey.blog/"
