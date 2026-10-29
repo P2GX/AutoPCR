@@ -26,7 +26,6 @@ dependencies = [
     "benepar>=0.2",
     "spacy-curated-transformers>=0.3",
     "openai >= 3.41",
-    "scispacy>=0.6"
 ]
 [project.optional-dependencies]
 abbreviations = ["scispacy>=0.6"]
