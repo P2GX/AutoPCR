@@ -81,9 +81,6 @@ class bioTag_SapBERT:
         # ../../sapbert/train/tmp/sapbert_umls-hpo
         self.tokenizer = AutoTokenizer.from_pretrained(ccr)
         self.model = AutoModel.from_pretrained(ccr).to(self.device)
-        self.index = faiss.index_cpu_to_gpu(
-            faiss.StandardGpuResources(), 0, faiss.read_index(model_files["index"])
-        )
 
         use_faiss_gpu = (
             self.device.type == "cuda"
@@ -93,9 +90,9 @@ class bioTag_SapBERT:
         if use_faiss_gpu:
             self.gpu_res = faiss.StandardGpuResources()  # keep a reference
             gpu_id = self.device.index or 0
-            self.index = faiss.index_cpu_to_gpu(self.gpu_res, gpu_id, index)
+            self.index = faiss.index_cpu_to_gpu(self.gpu_res, gpu_id, faiss.read_index(str(model_files["index"])))
         else:
-            self.index = self.index
+            self.index = faiss.read_index(str(model_files["index"]))
 
         self.index_to_id = json.load(open(model_files["index_to_id"], "r"))
         self.index_to_term = json.load(open(model_files["index_to_term"], "r"))

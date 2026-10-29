@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import nltk
 import os
 import unicodedata
@@ -12,9 +10,6 @@ from autopcr._stopwords import stopwords
 
 project_path = os.path.dirname(__file__) + "/../"
 
-# file path definition
-stopwords_file_path = project_path + "../data/stopwords.txt"
-num2word_file_path = project_path + "../data/NUM.txt"
 wnl = WordNetLemmatizer()
 
 
@@ -86,14 +81,14 @@ class PhraseItem:
 
     def __init__(self, word_items):
         self.word_items = word_items
+        self._num_2_word = get_num_2_word()
+        self._stop_words = stopwords
         self.simple_items = []
         self.simplify()
         self.locs_set = set([i.start for i in word_items])
         self.start_loc = self.word_items[0].start
         self.end_loc = self.word_items[-1].end
         self.no_flag = False
-        self._num_2_word = get_num_2_word()
-        self._stop_words = stopwords
 
     def _simplify(self, word_items):
         simple_items = []
@@ -117,19 +112,19 @@ class PhraseItem:
         对phrase_item进行简化，去除常用词以及替换数字
         :return:
         """
-        self.simple_items = PhraseItem._simplify(self.word_items)
+        self.simple_items = self._simplify(word_items=self.word_items)
 
     @staticmethod
     def _toString(items):
         return " ".join(i.text for i in items)
 
     @staticmethod
-    def _toSimpleString(word_items):
+    def _toSimpleString( word_items):
         simple_items = []
         for word_item in word_items:
-            if word_item.text in PhraseItem.Num2Word:
-                simple_items.append(PhraseItem.Num2Word[word_item.text])
-            elif word_item.text in PhraseItem.StopWords or isNum(word_item.text):
+            if word_item.text in get_num_2_word():
+                simple_items.append( get_num_2_word()[word_item.text])
+            elif word_item.text in stopwords or isNum(word_item.text):
                 continue
             else:
                 simple_items.append(word_item.text)
@@ -204,19 +199,9 @@ def isNum(strings):
         return False
 
 
-def getStopWords():
-    """
-    返回stopwords_file_path给定的stop words
-    :return:
-    """
-    stopwords = set()
-    with open(stopwords_file_path, encoding="utf-8") as file:
-        for line in file:
-            stopwords.add(line.strip())
-    return stopwords
 
 
-def getSpliters():
+def get_spliters():
     """
     用于分割短句的分割词
     :return:
@@ -224,7 +209,7 @@ def getSpliters():
     spliters = set(
         [
             word
-            for word, pos in nltk.pos_tag(stopwords.words("english"))
+            for word, pos in nltk.pos_tag(stopwords)
             if pos in {"CC", "WP", "TO", "WDT"}
         ]
         + [",", ".", ":", ";", "(", ")", "[", "]", "/"]

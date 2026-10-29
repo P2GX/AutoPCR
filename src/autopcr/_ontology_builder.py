@@ -220,7 +220,6 @@ class OntologyBuilder:
                 if hpoid not in tree_obo[father_hpoid]:
                     tree_obo[father_hpoid].append(hpoid)
 
-
         if root_node == "None":
             clean_nodes = temp_id
         else:
@@ -242,7 +241,9 @@ class OntologyBuilder:
     @staticmethod
     def _word_hpo_map(hpo_obo: dict, working_dir: Path, clean_nodes: list):
         for first in [False, True]:
-            file_path = working_dir / (FIRST_WORD_ID_MAP_FILE if first else WORD_ID_MAP_FILE)
+            file_path = working_dir / (
+                FIRST_WORD_ID_MAP_FILE if first else WORD_ID_MAP_FILE
+            )
             fout = open(
                 file_path,
                 "w",

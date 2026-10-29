@@ -63,15 +63,16 @@ class Extractor:
 
         self.nn_model = bioTag_SapBERT(
             vocabfiles,
-            extractor_config.detect_abbreviations,
-            extractor_config.accept_threshold,
-            extractor_config.candidate_threshold,
-            extractor_config.num_candidates,
-            extractor_config.linking_model,
-            extractor_config.api_provider,
-            extractor_config.api_key,
-            extractor_config.seed,
-            extractor_config.use_cache,
+            ccr=extractor_config.retrieval_model,
+            tau_1=extractor_config.accept_threshold,
+            tau_2=extractor_config.candidate_threshold,
+            k=extractor_config.num_candidates,
+            el=extractor_config.linking_model,
+            api_key=extractor_config.api_key,
+            seed=extractor_config.seed,
+            use_cache=extractor_config.use_cache,
+            device=extractor_config.device,
+            provider = extractor_config.provider,
         )
 
         self.files = None

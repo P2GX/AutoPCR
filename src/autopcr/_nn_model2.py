@@ -12,6 +12,7 @@ import nltk
 
 from autopcr._utils import prompt, GROUNDING_PROMPT
 from autopcr._ee.utils import get_wordnet_pos
+from autopcr._utils.provider import Provider
 
 lemmatizer = WordNetLemmatizer()
 
@@ -99,7 +100,7 @@ class bioTag_SapBERT:
         tau_2,
         k,
         el,
-        api_provider,
+        provider,
         api_key,
         seed,
         use_cache,
@@ -116,9 +117,18 @@ class bioTag_SapBERT:
         # ../../sapbert/train/tmp/sapbert_umls-hpo
         self.tokenizer = AutoTokenizer.from_pretrained(ccr)
         self.model = AutoModel.from_pretrained(ccr).to(self.device)
-        self.index = faiss.index_cpu_to_gpu(
-            faiss.StandardGpuResources(), 0, faiss.read_index(model_files["index"])
+        use_faiss_gpu = (
+            self.device.type == "cuda"
+            and hasattr(faiss, "StandardGpuResources")  # False with faiss-cpu
+            and faiss.get_num_gpus() > 0
         )
+        if use_faiss_gpu:
+            self.gpu_res = faiss.StandardGpuResources()  # keep a reference
+            gpu_id = self.device.index or 0
+            self.index = faiss.index_cpu_to_gpu(self.gpu_res, gpu_id, faiss.read_index(str(model_files["index"])))
+        else:
+            self.index = faiss.read_index(str(model_files["index"]))
+
         self.index_to_id = json.load(open(model_files["index_to_id"], "r"))
         self.index_to_term = json.load(open(model_files["index_to_term"], "r"))
         self.id_to_concept = json.load(open(model_files["id_to_concept"], "r"))
@@ -129,7 +139,7 @@ class bioTag_SapBERT:
         self.use_cache = use_cache
         self.cache = {}
         self.el = el
-        self.api_provider = api_provider
+        self.provider: Provider = provider
         self.api_key = api_key
         self.seed = seed
         self.cand_path = cand_path
@@ -267,7 +277,7 @@ class bioTag_SapBERT:
                 pr[i] = gen_grounding_prompt2({"label": x[i]}, concepts_, texts[i])
         # print([pr[i] for i in pr if x[i] == 'thumb anomalies'])
         responses = (
-            prompt(pr, self.el, self.api_provider, self.api_key, self.seed)
+            prompt(pr, self.el,self.provider, self.seed)
             if self.el != "none"
             else {}
         )

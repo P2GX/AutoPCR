@@ -89,7 +89,9 @@ class IndexBuilder:
         vocab = open(working_dir / LABLE_VOCAB_FILE).read().split("\n")[:3]
         print(repr(vocab), list(index_to_id.values())[:3])
         faiss_index_filtered.add(embs_filtered)
-        faiss.write_index(faiss_index_filtered,str( working_dir / MAIN_LABEL_INDEX_FILE))
+        faiss.write_index(
+            faiss_index_filtered, str(working_dir / MAIN_LABEL_INDEX_FILE)
+        )
 
         def list2str(l, delimiter=" | "):
             return delimiter.join([str(i) for i in l])

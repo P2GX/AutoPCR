@@ -1,5 +1,6 @@
 import stanza
 from .utils import *
+from autopcr._stopwords import stopwords
 
 clinical_ner_model = stanza.Pipeline(
     "en", package="mimic", processors={"ner": "i2b2"}, verbose=False
@@ -14,8 +15,7 @@ def process_text2phrases(text, clinical_ner_model):
     :return: List[PhraseItem]
     """
     tokenizer = SpanTokenizer()
-    spliters = getSpliters()
-    stopwords = getStopWords()
+    spliters = get_spliters()
     # # 将文本处理成正常的小写形式
     # text = strip_accents(text.lower())
     # text = re.sub("[-_\"\'\\\\\t‘’]", " ", text)
