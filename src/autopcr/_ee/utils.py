@@ -216,18 +216,11 @@ def get_spliters():
     )
     return spliters
 
+import unicodedata
 
 def normalize_with_char_map(text):
-    """
-    预处理 text（两步：去掉 A-1 里的 '-', 折叠空白为单空格），
-    并返回：
-      new_text: 改完的字符串
-      index_map: 长度 = len(new_text)，index_map[i] = 对应的原文字符下标
-    """
-    # 将文本处理成正常的小写形式
     text = strip_accents(text)
     text = re.sub("[\"'\\\\\t‘’]", " ", text)
-    # 对于换行符替换为句号，后续作为分割词
     text = re.sub("(?<=[\w])[\r\n]", ".", text)
 
     n = len(text)
@@ -238,36 +231,38 @@ def normalize_with_char_map(text):
     while i < n:
         ch = text[i]
 
-        # 规则1: 删除 [A-Z]-[0-9] 中的 '-'，不输出字符，只跳过
-        if (
-            ch == "-"
-            and i > 0
-            and i + 1 < n
-            and text[i - 1].isupper()
-            and text[i + 1].isdigit()
-        ):
+        # Rule 0: drop invisible format/control chars (zero-width space, BOM, soft hyphen, ...)
+        if not ch.isspace() and unicodedata.category(ch) in ("Cf", "Cc", "Co", "Cn"):
             i += 1
             continue
 
-        # 规则2: 空白折叠
+        # Rule 1: drop '-' in [A-Z]-[0-9]
+        if ch == "-" and 0 < i < n - 1 and text[i - 1].isupper() and text[i + 1].isdigit():
+            i += 1
+            continue
+
+        # Rule 2: collapse whitespace; skip it entirely at the start of the text
         if ch.isspace():
             j = i + 1
             while j < n and text[j].isspace():
                 j += 1
-            # 输出一个空格，映射到原文第一位空白
-            out_chars.append(" ")
-            index_map.append(i)
+            if out_chars:
+                out_chars.append(" ")
+                index_map.append(i)
             i = j
             continue
 
-        # 普通字符：原样输出，映射到自身位置
         out_chars.append(ch)
         index_map.append(i)
         i += 1
 
+    # strip a trailing space (and its map entry)
+    if out_chars and out_chars[-1] == " ":
+        out_chars.pop()
+        index_map.pop()
+
     index_map.append(n)
-    text = "".join(out_chars)
-    return text, index_map
+    return "".join(out_chars), index_map
 
 
 def get_wordnet_pos(treebank_tag):
