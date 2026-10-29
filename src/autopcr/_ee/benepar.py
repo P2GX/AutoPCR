@@ -2,7 +2,6 @@ import benepar
 import spacy
 from collections import defaultdict
 from .utils import *
-from scispacy.abbreviation import AbbreviationDetector  # noqa: F401  registers "abbreviation_detector"
 
 SPACY_MODEL = "en_core_web_trf"
 BENEPAR_MODEL = "benepar_en3_large"
