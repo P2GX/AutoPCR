@@ -1,0 +1,36 @@
+name: CD
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish-to-pypi:
+    name: Build distribution 📦
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+    - name: Check out Repo
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+
+    - name: Setup Python from pyproject.toml
+      uses: ./.github/actions/python_from_pyproject
+
+    - name: Install build
+      run: >-
+        pip install build==1.2.2.post1
+
+    - name: Build a binary wheel and a source tarball
+      run: python3 -m build
+
+
+    - name: Publish distribution 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages-dir: dist/
+
