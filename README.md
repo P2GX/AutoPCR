@@ -3,6 +3,7 @@
 [![arXiv](https://img.shields.io/badge/arXiv-2507.19315-b31b1b.svg)](https://arxiv.org/abs/2507.19315)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
 **Automated Phenotype Concept Recognition by Prompting, packaged as a Python library.**
 
 AutoPCR finds phenotype mentions in free text (clinical notes, case reports, abstracts) and links each one to a concept in the [Human Phenotype Ontology (HPO)](https://hpo.jax.org/). It needs no ontology-specific training: you point it at an `.obo` file, it builds a dense index once, and a large language model makes the final call on ambiguous matches.
