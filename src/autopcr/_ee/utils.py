@@ -119,11 +119,11 @@ class PhraseItem:
         return " ".join(i.text for i in items)
 
     @staticmethod
-    def _toSimpleString( word_items):
+    def _toSimpleString(word_items):
         simple_items = []
         for word_item in word_items:
             if word_item.text in get_num_2_word():
-                simple_items.append( get_num_2_word()[word_item.text])
+                simple_items.append(get_num_2_word()[word_item.text])
             elif word_item.text in stopwords or isNum(word_item.text):
                 continue
             else:
@@ -199,8 +199,6 @@ def isNum(strings):
         return False
 
 
-
-
 def get_spliters():
     """
     用于分割短句的分割词
@@ -216,7 +214,9 @@ def get_spliters():
     )
     return spliters
 
+
 import unicodedata
+
 
 def normalize_with_char_map(text):
     text = strip_accents(text)
@@ -237,7 +237,12 @@ def normalize_with_char_map(text):
             continue
 
         # Rule 1: drop '-' in [A-Z]-[0-9]
-        if ch == "-" and 0 < i < n - 1 and text[i - 1].isupper() and text[i + 1].isdigit():
+        if (
+            ch == "-"
+            and 0 < i < n - 1
+            and text[i - 1].isupper()
+            and text[i + 1].isdigit()
+        ):
             i += 1
             continue
 

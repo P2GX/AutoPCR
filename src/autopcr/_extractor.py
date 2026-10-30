@@ -72,7 +72,7 @@ class Extractor:
             seed=extractor_config.seed,
             use_cache=extractor_config.use_cache,
             device=extractor_config.device,
-            provider = extractor_config.provider,
+            provider=extractor_config.provider,
         )
 
         self.files = None

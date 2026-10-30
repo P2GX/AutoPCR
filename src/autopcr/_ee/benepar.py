@@ -253,7 +253,7 @@ def iterate_spans(spans):
     return new_spans
 
 
-def process_text2phrases( text, clinical_ner_model):
+def process_text2phrases(text, clinical_ner_model):
     """
     用于从文本中提取Clinical Text Segments
     :param text:自由文本

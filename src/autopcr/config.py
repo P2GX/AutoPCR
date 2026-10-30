@@ -16,7 +16,9 @@ class AutoPCRConfig:
     accept_threshold: float = 0.95
     candidate_threshold: float = 0.85
     num_candidates: int = 5
-    linking_model: str = "ttempvnn/Huihui-Qwen3-Next-80B-A3B-Instruct-abliterated-Q4-K-M"
+    linking_model: str = (
+        "ttempvnn/Huihui-Qwen3-Next-80B-A3B-Instruct-abliterated-Q4-K-M"
+    )
     api_key: str | None = None
     use_finetuning_prompt: bool = False
     seed: int = 42

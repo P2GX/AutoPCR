@@ -39,9 +39,6 @@ class Prompt(TypedDict):
     user: str
 
 
-
-
-
 def _resolve(
     api_provider: str, api_key: str | None, base_url: str | None
 ) -> tuple[Provider, str, str | None]:
@@ -72,7 +69,7 @@ def _resolve(
 
 
 @lru_cache(maxsize=None)
-def get_client(api_key: str|None, base_url: str | None, local: bool) -> OpenAI:
+def get_client(api_key: str | None, base_url: str | None, local: bool) -> OpenAI:
     """Build (once) and cache a client per (key, url) combination."""
     return OpenAI(
         api_key=api_key,

@@ -90,7 +90,9 @@ class bioTag_SapBERT:
         if use_faiss_gpu:
             self.gpu_res = faiss.StandardGpuResources()  # keep a reference
             gpu_id = self.device.index or 0
-            self.index = faiss.index_cpu_to_gpu(self.gpu_res, gpu_id, faiss.read_index(str(model_files["index"])))
+            self.index = faiss.index_cpu_to_gpu(
+                self.gpu_res, gpu_id, faiss.read_index(str(model_files["index"]))
+            )
         else:
             self.index = faiss.read_index(str(model_files["index"]))
 

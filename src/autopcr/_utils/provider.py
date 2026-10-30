@@ -3,6 +3,7 @@ from typing import Literal
 
 ProviderBackend = Literal["openai", "ollama", "groq", "together", "vllm"]
 
+
 @dataclass(frozen=True)
 class Provider:
     name: ProviderBackend
@@ -10,6 +11,3 @@ class Provider:
     concurrency: int
     local: bool = False
     api_key: str | None = None
-
-
-

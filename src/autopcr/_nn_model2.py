@@ -125,7 +125,9 @@ class bioTag_SapBERT:
         if use_faiss_gpu:
             self.gpu_res = faiss.StandardGpuResources()  # keep a reference
             gpu_id = self.device.index or 0
-            self.index = faiss.index_cpu_to_gpu(self.gpu_res, gpu_id, faiss.read_index(str(model_files["index"])))
+            self.index = faiss.index_cpu_to_gpu(
+                self.gpu_res, gpu_id, faiss.read_index(str(model_files["index"]))
+            )
         else:
             self.index = faiss.read_index(str(model_files["index"]))
 
@@ -277,9 +279,7 @@ class bioTag_SapBERT:
                 pr[i] = gen_grounding_prompt2({"label": x[i]}, concepts_, texts[i])
         # print([pr[i] for i in pr if x[i] == 'thumb anomalies'])
         responses = (
-            prompt(pr, self.el,self.provider, self.seed)
-            if self.el != "none"
-            else {}
+            prompt(pr, self.el, self.provider, self.seed) if self.el != "none" else {}
         )
         # lines = ''
         anns = []
