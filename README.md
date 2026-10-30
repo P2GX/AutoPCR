@@ -178,7 +178,7 @@ If you use AutoPCR in your work, please cite the original paper:
   year    = {2026},
   doi     = {10.1093/bioinformatics/btag304}
 }
-``
+```
 
 Preprint: [arXiv:2507.19315](https://arxiv.org/abs/2507.19315)
 
