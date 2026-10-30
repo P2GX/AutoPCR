@@ -436,8 +436,7 @@ def find_max_entity_nest(nest_list):
             if score > float(temp_result_list[hpoid][-1]):
                 temp_result_list[hpoid] = nest_list[i]
     new_list = []
-    for hpoid in temp_result_list.keys():
-        new_list.append(temp_result_list[hpoid])
+    new_list.extend(temp_result_list.values())
     return new_list
 
 

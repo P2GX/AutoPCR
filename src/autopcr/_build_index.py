@@ -30,7 +30,8 @@ class IndexBuilder:
         self._model = AutoModel.from_pretrained(hf_model_name)
 
     def build_index(self, working_dir: Path):
-        hpo_concepts = json.load(open(working_dir / OBO_JSON_FILE, "r"))
+        with open(working_dir / OBO_JSON_FILE, "r") as f:
+            hpo_concepts = json.load(f)
 
         # 🔹 3. 计算 embedding 并存入 Faiss
         term_to_main_label = {}  # 存储同义词 → 主要术语的映射
@@ -49,9 +50,12 @@ class IndexBuilder:
 
         index_to_id = {i: term_to_id[all_terms[i]] for i in range(len(all_terms))}
         index_to_term = {i: all_terms[i] for i in range(len(all_terms))}
-        json.dump(index_to_id, open(working_dir / INDEX_TO_ID_FILE, "w"))
-        json.dump(index_to_term, open(working_dir / INDEX_TO_TERM_FILE, "w"))
-        json.dump(term_to_main_label, open(working_dir / TERM_TO_MAIN_LABEL_FILE, "w"))
+        with open(working_dir / INDEX_TO_ID_FILE, "w") as f:
+            json.dump(index_to_id, f)
+        with open(working_dir / INDEX_TO_TERM_FILE, "w") as f:
+            json.dump(index_to_term, f)
+        with open(working_dir / TERM_TO_MAIN_LABEL_FILE, "w") as f:
+            json.dump(term_to_main_label, f)
 
         # 🔹 4. 转换为 numpy 数组，并存入 Faiss
         ontology_embeddings = np.array(
@@ -64,37 +68,37 @@ class IndexBuilder:
         faiss.write_index(faiss_index, str(working_dir / MAIN_INDEX_FILE))
 
         # 🔹 5. Make index focus on lable.vocab
-        ids_filtered = (
-            open(working_dir / LABLE_VOCAB_FILE, "r").read().strip().split("\n")
-        )
+        with open(working_dir / LABLE_VOCAB_FILE, "r") as f:
+            ids_filtered = {line.strip() for line in f if line.strip()}
+
         indices_filtered = [
-            index for index, id in index_to_id.items() if id in ids_filtered
+            index for index, id_ in index_to_id.items() if id_ in ids_filtered
         ]
+
         index_to_id_filtered = {
             i: index_to_id[index] for i, index in enumerate(indices_filtered)
         }
         index_to_term_filtered = {
             i: index_to_term[index] for i, index in enumerate(indices_filtered)
         }
-        json.dump(index_to_id_filtered, open(working_dir / INDEX_TO_ID_LABEL_FILE, "w"))
-        json.dump(
-            index_to_term_filtered,
-            open(working_dir / INDEX_TO_TERM_LABEL_FILE, "w"),
-        )
+        with open(working_dir / INDEX_TO_ID_LABEL_FILE, "w") as f:
+            json.dump(index_to_id_filtered, f)
+
+        with open(working_dir / INDEX_TO_TERM_LABEL_FILE, "w") as f:
+            json.dump(index_to_term_filtered, f)
 
         embs = np.array([faiss_index.reconstruct(i) for i in range(faiss_index.ntotal)])
         embs_filtered = np.array([embs[int(i)] for i in indices_filtered])
 
         faiss_index_filtered = faiss.IndexFlatIP(faiss_index.d)
-        vocab = open(working_dir / LABLE_VOCAB_FILE).read().split("\n")[:3]
-        print(repr(vocab), list(index_to_id.values())[:3])
+
         faiss_index_filtered.add(embs_filtered)
         faiss.write_index(
             faiss_index_filtered, str(working_dir / MAIN_LABEL_INDEX_FILE)
         )
 
-        def list2str(l, delimiter=" | "):
-            return delimiter.join([str(i) for i in l])
+        def list2str(some_list, delimiter=" | "):
+            return delimiter.join([str(i) for i in some_list])
 
         concepts = {}
         for id, concept in hpo_concepts.items():
@@ -107,7 +111,8 @@ class IndexBuilder:
                 "xref": concept.get("xref", []),
                 "is_a": list2str([c.replace(":", "_") for c in concept["is_a"]]),
             }
-        json.dump(concepts, open(working_dir / ID_TO_CONCEPT_FILE, "w"))
+        with open(working_dir / ID_TO_CONCEPT_FILE, "w") as f:
+            json.dump(concepts, f)
 
         def get_umls_name(s):
             apikey = os.getenv("UMLS_API_KEY")
@@ -123,7 +128,7 @@ class IndexBuilder:
 
             names = []
             if len(output_json["result"]) == 0:
-                print("No results found for " + "\n")
+                pass
             else:
                 names = [
                     r["name"]
@@ -135,7 +140,8 @@ class IndexBuilder:
         if str(working_dir) == "../dict/HPO":
             umls_syns = {}
             if os.path.exists("../data/HPO_UMLS-synonyms.json"):
-                umls_syns = json.load(open("../data/HPO_UMLS-synonyms.json", "r"))
+                with open("../data/HPO_UMLS-synonyms.json", "r") as f:
+                    umls_syns = json.load(f)
             concepts = {
                 id: concept
                 | {
@@ -156,7 +162,8 @@ class IndexBuilder:
                     if c.lower() not in ori_syns
                 ]
                 concepts[id]["UMLS synonyms"] = list2str(new_umls_syns)
-            json.dump(concepts, open(working_dir / ID_TO_CONCEPT_FILE, "w"))
+            with open(working_dir / ID_TO_CONCEPT_FILE, "w") as f:
+                json.dump(concepts, f)
 
     @staticmethod
     def _get_embs(all_names, tokenizer, model, bs=128):

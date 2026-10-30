@@ -1,5 +1,14 @@
 import stanza
-from .utils import *
+
+from autopcr._ee.utils import (
+    SpanTokenizer,
+    get_spliters,
+    WordItem,
+    PhraseItem,
+    wnl,
+    normalize_with_char_map,
+    isNum,
+)
 from autopcr._stopwords import stopwords
 
 clinical_ner_model = stanza.Pipeline(
@@ -140,8 +149,7 @@ def process_text2phrases(text, clinical_ner_model):
             sub_phrases[-1].no_flag = pi.no_flag
 
         # 首先把原始分割的短语都加进去
-        for item in sub_phrases:
-            sub_sentences_.append(item)
+        sub_sentences_.extend(sub_phrases)
 
         # 只考虑A+B形式的恢复
         if len(sub_phrases) == 2:

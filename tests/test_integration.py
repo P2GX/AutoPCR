@@ -14,4 +14,5 @@ def test_integration():
     res = aprc.extract(
         "During the interview the patient displayed marked autistic behaviors, including poor eye contact and rigid, repetitive speech, and also reported ongoing hallucinations that had worsened over the past month."
     )
-    print(res)
+
+    print(res)  # noqa: T201

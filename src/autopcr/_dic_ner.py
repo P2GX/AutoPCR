@@ -8,7 +8,8 @@ class Trie(object):
             self.term = None
             self.next = {}
 
-    def __init__(self, terms=[]):
+    def __init__(self, terms: list | None = None):
+        terms = terms or []
         self.root = Trie.Node()
         for term in terms:
             self.add(term)
@@ -16,7 +17,7 @@ class Trie(object):
     def add(self, term):
         node = self.root
         for char in term:
-            if not char in node.next:
+            if char not in node.next:
                 node.next[char] = Trie.Node()
             node = node.next[char]
         node.term = term
@@ -48,34 +49,28 @@ class Trie(object):
 class dic_ont:
     def __init__(self, ont_files):
 
-        dicin = open(ont_files["dic_file"], "r", encoding="utf-8")
-        win_size = 50000
-        Dic = []
-        print("loading dict!")
-        for line in dicin:
-            line = line.strip()
-            if len(line.split()) <= win_size:
-                words = line.split()
-                for i in range(len(words)):
-                    if len(words[i]) > 3 and (not words[i].isupper()):
-                        words[i] = words[i].lower()
-                line = " ".join(words[0:])
-                Dic.append(line.strip())
-        print("Dic_len:", len(Dic))
-        dicin.close()
+        with open(ont_files["dic_file"], "r", encoding="utf-8") as dicin:
+            win_size = 50000
+            Dic = []
+            for line in dicin:
+                line = line.strip()
+                if len(line.split()) <= win_size:
+                    words = line.split()
+                    for i in range(len(words)):
+                        if len(words[i]) > 3 and (not words[i].isupper()):
+                            words[i] = words[i].lower()
+                    line = " ".join(words[0:])
+                    Dic.append(line.strip())
 
         self.dic_trie = Trie(Dic)
-        print("load dic done!")
 
         # load word hpo mapping
-        fin_map = open(ont_files["word_hpo_file"], "r", encoding="utf-8")
-        self.word_hpo = json.load(fin_map)
-        fin_map.close()
+        with open(ont_files["word_hpo_file"], "r", encoding="utf-8") as fin_map:
+            self.word_hpo = json.load(fin_map)
 
         # load hpo word mapping
-        fin_map = open(ont_files["hpo_word_file"], "r", encoding="utf-8")
-        self.hpo_word = json.load(fin_map)
-        fin_map.close()
+        with open(ont_files["hpo_word_file"], "r", encoding="utf-8") as fin_map:
+            self.hpo_word = json.load(fin_map)
 
     def matching(self, source):
 
@@ -131,7 +126,6 @@ class dic_ont:
                     if entity_text in self.word_hpo.keys():
                         hpoid = self.word_hpo[entity_text]
                     else:
-                        print("no id:", entity_text)
                         hpoid = ["None"]
                     if ele[0] == 0:
                         sid = "0"

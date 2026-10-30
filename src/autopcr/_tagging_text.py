@@ -33,9 +33,9 @@ def bioTag(
 
     final_result = restore_index_nest_fn(text, combine_tsv)
     #    print('final ner:',time.time()-startTime)
-    if onlyLongest == True:
+    if onlyLongest:
         final_result = combine_overlap(final_result)
-    if abbrRecog == True:
+    if abbrRecog:
         final_result = postprocess_abbr(final_result, text)
     #    print('final result:')
     #    print(final_result)
@@ -56,9 +56,9 @@ def bioTag_batch(
         dict_tsv = biotag_dic.matching(ssplit_token_batch[i])
         combine_tsv = combine_ml_dict(dict_tsv, ml_tsv_batch[i])
         final_result = restore_index_nest_fn(text_batch[i], combine_tsv)
-        if onlyLongest == True:
+        if onlyLongest:
             final_result = combine_overlap(final_result)
-        if abbrRecog == True:
+        if abbrRecog:
             final_result = postprocess_abbr(final_result, text_batch[i])
         final_result_batch.append(final_result)
     return final_result_batch
@@ -79,10 +79,10 @@ def bioTag_ml(text, ml_model, onlyLongest=False, abbrRecog=False, Threshold=0.95
 
     final_result = restore_index_nest_fn(text, ml_tsv)
     #    print('final ner:',time.time()-startTime)
-    if onlyLongest == True:
+    if onlyLongest:
         final_result = combine_overlap(final_result)
 
-    if abbrRecog == True:
+    if abbrRecog:
         final_result = postprocess_abbr(final_result, text)
 
     return final_result
@@ -103,10 +103,10 @@ def bioTag_dic(text, biotag_dic, onlyLongest=False, abbrRecog=False):
 
     final_result = restore_index_nest_fn(text, dict_tsv)
     #    print('final ner:',time.time()-startTime)
-    if onlyLongest == True:
+    if onlyLongest:
         final_result = combine_overlap(final_result)
 
-    if abbrRecog == True:
+    if abbrRecog:
         final_result = postprocess_abbr(final_result, text)
 
     return final_result

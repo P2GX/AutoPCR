@@ -1,7 +1,8 @@
 import benepar
 import spacy
 from collections import defaultdict
-from .utils import *
+from functools import lru_cache
+from autopcr._ee.utils import PhraseItem, normalize_with_char_map
 
 SPACY_MODEL = "en_core_web_trf"
 BENEPAR_MODEL = "benepar_en3_large"
@@ -19,7 +20,6 @@ except LookupError:
     benepar.download(BENEPAR_MODEL)
     clinical_ner_model.add_pipe("benepar", config={"model": BENEPAR_MODEL})
 
-from functools import lru_cache
 
 SCISPACY_MODEL = "en_core_sci_scibert"
 
@@ -40,7 +40,9 @@ def _abbr_model():
 
 # def generate_spans(sent, tags=['NP', 'UCP', 'NML', 'NX', 'NN', 'NNS', 'NNP', 'NNPS']):
 #     return [s for s in sent._.constituents if (s._.labels[0] if s._.labels else s.root.tag_) in tags]
-def generate_spans(sent, tags=["NP", "UCP", "NML", "NX", "NN", "NNS", "NNP", "NNPS"]):
+def generate_spans(sent, tags: list | None = None):
+    tags = tags or ["NP", "UCP", "NML", "NX", "NN", "NNS", "NNP", "NNPS"]
+
     def get_tag(s):
         if not s:
             return ""
@@ -98,7 +100,7 @@ def get_phrases_by_root(sent):
         label = s._.labels[0] if s._.labels else ""
         if label and not label.endswith("S"):
             root2phrases[s.root].append(s)
-    for root, phrases in root2phrases.items():
+    for phrases in root2phrases.values():
         phrases.sort(key=len)
     return dict(root2phrases)
 

@@ -17,10 +17,7 @@ class UninitializedError(RuntimeError):
 
 
 class AutoPCR:
-    def __init__(
-        self,
-        config: AutoPCRConfig,
-    ):
+    def __init__(self, config: AutoPCRConfig):
         limit_openmp()
         self._work_dir = config.working_dir
         self._extractor_config = config
@@ -28,14 +25,13 @@ class AutoPCR:
 
     @property
     def is_initialized(self) -> bool:
+        """Check if AutoPCR is initialized."""
         return self._extractor is not None
 
     def initialize(
-        self,
-        hpo_file: Path,
-        overwrite: bool = False,
-        root_node: str = "HP:0000118",
+        self, hpo_file: Path, overwrite: bool = False, root_node: str = "HP:0000118"
     ):
+        """Initialize AutoPCR saves all needed files into working directory."""
         if overwrite or not all(Path(f).exists() for f in ALL_FILES):
             ontology_builder = OntologyBuilder(hpo_file, root_node, WordNetLemmatizer())
             ontology_builder.build(self._work_dir)
@@ -45,6 +41,7 @@ class AutoPCR:
         self._extractor = Extractor(self._extractor_config)
 
     def extract(self, text: str) -> list[Hit]:
+        """Extract Hits from text and return a list of Hits."""
         if self._extractor is None:
             raise UninitializedError("Call initialize() first")
         return self._extractor.extract(text)

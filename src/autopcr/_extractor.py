@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from autopcr.config import AutoPCRConfig
 from autopcr.hit import Hit
 from autopcr._dic_ner import dic_ont
@@ -29,10 +27,7 @@ session = tf.Session(config=config)
 
 
 class Extractor:
-    def __init__(
-        self,
-        extractor_config: AutoPCRConfig,
-    ):
+    def __init__(self, extractor_config: AutoPCRConfig):
         self.working_dir = extractor_config.working_dir
         self.ee = extractor_config.span_extractor
         self.abbr_recog = extractor_config.detect_abbreviations

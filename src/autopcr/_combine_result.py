@@ -13,8 +13,7 @@ def nest_overlap_entity(nest_list):
             if score > old_score:  # retain higer score concept
                 temp_result_list[hpoid] = nest_list[i]
     new_list = []
-    for hpoid in temp_result_list.keys():
-        new_list.append(temp_result_list[hpoid])
+    new_list.extend(temp_result_list.keys())
 
     temp_result_list = {}  # same index, different ids
     for i in range(0, len(new_list)):

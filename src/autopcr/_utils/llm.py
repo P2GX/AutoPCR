@@ -30,7 +30,7 @@ from openai import OpenAI
 
 __all__ = ["Prompt", "PROVIDERS", "get_client", "prompt"]
 
-from autopcr._utils.provider import Provider, ProviderBackend
+from autopcr._utils.provider import Provider
 from autopcr.constants import PROVIDERS
 
 

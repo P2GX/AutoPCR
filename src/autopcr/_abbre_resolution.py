@@ -286,46 +286,50 @@ def select_definition(definition, abbrev):
     return new_definition_dict
 
 
+def _resolve_candidate(candidate, sentence):
+    """Return the definition dict for a candidate, or None if it can't be resolved."""
+    try:
+        definition = get_definition(candidate, sentence)
+        definition_dict = select_definition(definition, candidate)
+    except (ValueError, IndexError):
+        return None
+    definition_dict["abbre"] = candidate
+    return definition_dict
+
+
+def _process_sentence(i, sentence):
+    """Return (pairs, omitted) for one sentence."""
+    pairs = []
+    omitted = 0
+    try:
+        for candidate in best_candidates(sentence):
+            definition_dict = _resolve_candidate(candidate, sentence)
+            if definition_dict is None:
+                omitted += 1
+            else:
+                pairs.append(definition_dict)
+    except (ValueError, IndexError) as e:
+        log.debug("%s Error processing sentence %s: %s", i, sentence, e.args[0])
+    return pairs, omitted
+
+
 def extract_abbreviation_definition_pairs(file_path=None, doc_text=None):
     abbrev_map = []
     omit = 0
-    written = 0
+
     if file_path:
-        sentence_iterator = enumerate(yield_lines_from_file(file_path))
+        sentences = yield_lines_from_file(file_path)
     elif doc_text:
-        sentence_iterator = enumerate(yield_lines_from_doc(doc_text))
+        sentences = yield_lines_from_doc(doc_text)
     else:
         return abbrev_map
 
-    for i, sentence in sentence_iterator:
-        # print(sentence)
-        try:
-            for candidate in best_candidates(sentence):
-                # print(candidate)
-                try:
-                    # print('begin get definition')
-                    definition = get_definition(candidate, sentence)
-                    # print('get_definition:')
-                    # print(definition)
+    for i, sentence in enumerate(sentences):
+        pairs, omitted = _process_sentence(i, sentence)
+        abbrev_map.extend(pairs)
+        omit += omitted
 
-                except (ValueError, IndexError) as e:
-                    # log.debug("{} Omitting candidate {}. Reason: {}".format(i, candidate, e.args[0]))
-                    omit += 1
-                else:
-                    try:
-                        definition_dict = select_definition(definition, candidate)
-                    except (ValueError, IndexError) as e:
-                        # log.debug("{} Omitting definition {} for candidate {}. Reason: {}".format(i, definition_dict, candidate, e.args[0]))
-                        omit += 1
-                    else:
-                        definition_dict["abbre"] = candidate
-                        abbrev_map.append(definition_dict)
-                        written += 1
-        except (ValueError, IndexError) as e:
-            log.debug(
-                "{} Error processing sentence {}: {}".format(i, sentence, e.args[0])
-            )
-    log.debug("{} abbreviations detected and kept ({} omitted)".format(written, omit))
+    log.debug("%s abbreviations detected and kept (%s omitted)", len(abbrev_map), omit)
     return abbrev_map
 
 
@@ -357,8 +361,8 @@ def postprocess_abbr(ner_result, ori_text):
                 # print(abbr_sid,abbr_eid)
                 if abbr_sid > 0 and abbr_eid < len(ori_text):
                     if (
-                        ori_text[abbr_sid - 1].isalnum() == False
-                        and ori_text[abbr_eid].isalnum() == False
+                        not ori_text[abbr_sid - 1].isalnum()
+                        and not ori_text[abbr_eid].isalnum()
                     ):
                         final_result[
                             str(abbr_sid)
@@ -370,7 +374,7 @@ def postprocess_abbr(ner_result, ori_text):
                             + nor_loc_list[abbr_index][3]
                         ] = [abbr_sid, abbr_eid]
                 elif abbr_sid == 0 and abbr_eid < len(ori_text):
-                    if ori_text[abbr_eid].isalnum() == False:
+                    if not ori_text[abbr_eid].isalnum():
                         final_result[
                             str(abbr_sid)
                             + "\t"
@@ -381,7 +385,7 @@ def postprocess_abbr(ner_result, ori_text):
                             + nor_loc_list[abbr_index][3]
                         ] = [abbr_sid, abbr_eid]
                 elif abbr_sid > 0 and abbr_eid == len(ori_text):
-                    if ori_text[abbr_sid - 1].isalnum() == False:
+                    if not ori_text[abbr_sid - 1].isalnum():
                         final_result[
                             str(abbr_sid)
                             + "\t"
@@ -426,8 +430,8 @@ def ner_abbr(ner_result, abbr_result, ori_text):
                 # print(abbr_sid,abbr_eid)
                 if abbr_sid > 0 and abbr_eid < len(ori_text):
                     if (
-                        ori_text[abbr_sid - 1].isalnum() == False
-                        and ori_text[abbr_eid].isalnum() == False
+                        not ori_text[abbr_sid - 1].isalnum()
+                        and not ori_text[abbr_eid].isalnum()
                     ):
                         final_result[
                             str(abbr_sid)
@@ -439,7 +443,7 @@ def ner_abbr(ner_result, abbr_result, ori_text):
                             + nor_loc_list[abbr_index][3]
                         ] = [abbr_sid, abbr_eid]
                 elif abbr_sid == 0 and abbr_eid < len(ori_text):
-                    if ori_text[abbr_eid].isalnum() == False:
+                    if not ori_text[abbr_eid].isalnum():
                         final_result[
                             str(abbr_sid)
                             + "\t"
@@ -450,7 +454,7 @@ def ner_abbr(ner_result, abbr_result, ori_text):
                             + nor_loc_list[abbr_index][3]
                         ] = [abbr_sid, abbr_eid]
                 elif abbr_sid > 0 and abbr_eid == len(ori_text):
-                    if ori_text[abbr_sid - 1].isalnum() == False:
+                    if not ori_text[abbr_sid - 1].isalnum():
                         final_result[
                             str(abbr_sid)
                             + "\t"

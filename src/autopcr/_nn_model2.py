@@ -38,7 +38,7 @@ def get_description(metadata, fields=None):
 def gen_grounding_prompt2(mention, concepts, text, linking_fields=None, examples=None):
     system_prompt = GROUNDING_PROMPT
     if examples:
-        system_prompt += f"Here are some examples:\n" + "\n".join(examples) + "\n"
+        system_prompt += "Here are some examples:\n" + "\n".join(examples) + "\n"
 
     if linking_fields is None:
         linking_fields = (
@@ -69,7 +69,7 @@ def gen_grounding_prompt2_llama(
 ):
     system_prompt = GROUNDING_PROMPT
     if examples:
-        system_prompt += f"Here are some examples:\n" + "\n".join(examples) + "\n"
+        system_prompt += "Here are some examples:\n" + "\n".join(examples) + "\n"
 
     if linking_fields is None:
         linking_fields = ("label", "definition", "synonyms", "UMLS synonyms")
@@ -131,11 +131,16 @@ class bioTag_SapBERT:
         else:
             self.index = faiss.read_index(str(model_files["index"]))
 
-        self.index_to_id = json.load(open(model_files["index_to_id"], "r"))
-        self.index_to_term = json.load(open(model_files["index_to_term"], "r"))
-        self.id_to_concept = json.load(open(model_files["id_to_concept"], "r"))
-        self.firstword_to_id = json.load(open(model_files["firstword_to_id"], "r"))
-        self.abbr = json.load(open(model_files["abbr"], "r"))
+        with open(model_files["index_to_id"], "r") as f:
+            self.index_to_id = json.load(f)
+        with open(model_files["index_to_term"], "r") as f:
+            self.index_to_term = json.load(f)
+        with open(model_files["id_to_concept"], "r") as f:
+            self.id_to_concept = json.load(f)
+        with open(model_files["firstword_to_id"], "r") as f:
+            self.firstword_to_id = json.load(f)
+        with open(model_files["abbr"], "r") as f:
+            self.abbr = json.load(f)
         self.llm_range = (tau_2, tau_1)
         self.k = k
         self.use_cache = use_cache
@@ -192,15 +197,15 @@ class bioTag_SapBERT:
             return {}
         embs = self.encode(x).astype("float32")
         faiss.normalize_L2(embs)
-        D, I = self.index.search(embs, Top_N)
+        neighbot_distance, nearest_neighbor = self.index.search(embs, Top_N)
         concepts = {}
         for i in range(len(x)):
             concepts[i] = [
                 (
-                    self.get_concept(str(I[i][j])),
-                    self.index_to_id[str(I[i][j])],
-                    float(D[i][j]),
-                    str(I[i][j]),
+                    self.get_concept(str(nearest_neighbor[i][j])),
+                    self.index_to_id[str(nearest_neighbor[i][j])],
+                    float(neighbot_distance[i][j]),
+                    str(nearest_neighbor[i][j]),
                 )
                 for j in range(Top_N)
             ]
@@ -232,7 +237,7 @@ class bioTag_SapBERT:
             # if ' ' not in x[i]:
             #     continue
             if " " not in x[i]:
-                # TODO: x[i] may be plural
+                # TODO(Yicheng Tao): x[i] may be plural
                 if id := self.abbr.get(x[i].lower(), ""):
                     concepts[i] = [
                         (self.id_to_concept[id.replace(":", "_")], id, 1.0)
@@ -306,10 +311,11 @@ class bioTag_SapBERT:
         # return lines
         return anns
 
-    # TODO: for local inference
+    # TODO(Yicheng Tao): for local inference
     def predict_llm_batch(self, x_batch, texts_batch, confidence=("HIGH")):
         if os.path.exists(self.cand_path):
-            concepts_batch = json.load(open(self.cand_path, "r"))
+            with open(self.cand_path, "r") as f:
+                concepts_batch = json.load(f)
             concepts_batch = {
                 int(i): {int(j): concepts[j] for j in concepts}
                 for i, concepts in concepts_batch.items()
@@ -318,10 +324,13 @@ class bioTag_SapBERT:
             concepts_batch = {
                 i: self.get_cand(x, self.k) for i, x in enumerate(x_batch)
             }
-            json.dump(concepts_batch, open(self.cand_path, "w"))
+            with open(self.cand_path, "w") as f:
+                json.dump(concepts_batch, f)
 
         if os.path.exists(self.cand_path + "_pr_res"):
-            responses_batch = json.load(open(self.cand_path + "_pr_res", "r"))
+            with open(self.cand_path + "_pr_res", "r") as f:
+                responses_batch = json.load(f)
+
             responses_batch = {
                 int(i): {int(j): responses[j] for j in responses}
                 for i, responses in responses_batch.items()
@@ -342,9 +351,9 @@ class bioTag_SapBERT:
                             {"label": x[i]}, concepts_, texts[i]
                         )
                 pr_batch[j] = pr
-            json.dump(pr_batch, open(self.cand_path + "_pr", "w"))
+            with open(self.cand_path + "_pr", "w") as f:
+                json.dump(pr_batch, f)
             exit(0)
-            responses_batch = prompt_batch(self.cand_path + "_pr", self.el)
 
         lines_batch = []
         for j, x in enumerate(x_batch):
@@ -376,11 +385,3 @@ class bioTag_SapBERT:
                 )
             lines_batch.append(lines)
         return lines_batch
-
-
-def print_gpu_usage():
-    if torch.cuda.is_available():
-        free, total = torch.cuda.mem_get_info(torch.device("cuda:0"))
-        print(f"GPU memory free: {free / 1024**3} GB")
-    else:
-        print("CUDA is not available.")

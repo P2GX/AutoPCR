@@ -2,10 +2,10 @@ import nltk
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet
 from nltk.stem.porter import PorterStemmer
+import io
 
 lemmatizer = WordNetLemmatizer()
 stemmer = PorterStemmer()
-import io
 
 
 def get_wordnet_pos(treebank_tag):

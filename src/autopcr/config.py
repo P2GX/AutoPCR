@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from pathlib import Path
 
 from autopcr._utils.llm import Provider

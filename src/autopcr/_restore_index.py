@@ -36,9 +36,6 @@ def restore_index_nest_fn(ori_text, file_pre):
                 if temp_id < 0:
                     if sentence_pre[i].find('"') >= 0:
                         temp_id = sentence_ori.find(sentence_pre[i].replace('"', '" '))
-                    else:
-                        # print('ori:',sentence_ori)
-                        print("resotr index error:", sentence_pre[i])
                 new_sentence += sentence_ori[0:temp_id]
 
                 restore_sid = len(new_sentence)
@@ -70,8 +67,6 @@ def restore_index_nest_fn(ori_text, file_pre):
                 if temp_id < 0:
                     if sentence_pre[i].find('"') >= 0:
                         temp_id = sentence_ori.find(sentence_pre[i].replace('"', '" '))
-                    else:
-                        print("resotr index error:", sentence_pre[i])
                 new_sentence += sentence_ori[0:temp_id]
                 new_sentence += sentence_ori[temp_id : temp_id + len(sentence_pre[i])]
                 sentence_ori = sentence_ori[temp_id + len(sentence_pre[i]) :]

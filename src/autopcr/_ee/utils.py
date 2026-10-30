@@ -1,10 +1,10 @@
 import nltk
 import os
-import unicodedata
 from nltk.tokenize import PunktSentenceTokenizer, TreebankWordTokenizer
 from nltk.corpus import wordnet
 from nltk.stem import WordNetLemmatizer
 import re
+import unicodedata
 
 from autopcr._stopwords import stopwords
 
@@ -19,7 +19,7 @@ class WordItem:
     """
 
     # 用于lemmatize
-    lemma_dict = {}
+    lemma_dict = {}  # noqa: RUF012
 
     def __init__(self, text, start, end):
         self.text = text.lower()
@@ -96,9 +96,7 @@ class PhraseItem:
             if word_item.text in self._num_2_word:
                 simple_items.append(
                     WordItem(
-                        self._num_2_word[word_item.text],
-                        word_item.start,
-                        word_item.end,
+                        self._num_2_word[word_item.text], word_item.start, word_item.end
                     )
                 )
             elif word_item.text in self._stop_words or isNum(word_item.text):
@@ -213,9 +211,6 @@ def get_spliters():
         + [",", ".", ":", ";", "(", ")", "[", "]", "/"]
     )
     return spliters
-
-
-import unicodedata
 
 
 def normalize_with_char_map(text):

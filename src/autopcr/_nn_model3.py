@@ -36,7 +36,7 @@ def get_description(metadata, fields=None):
 def gen_grounding_prompt2(mention, concepts, linking_fields=None, examples=None):
     system_prompt = GROUNDING_PROMPT_NOCONF
     if examples:
-        system_prompt += f"Here are some examples:\n" + "\n".join(examples) + "\n"
+        system_prompt += "Here are some examples:\n" + "\n".join(examples) + "\n"
 
     if linking_fields is None:
         linking_fields = ("label", "definition", "synonyms")  # 'synonyms'
@@ -95,12 +95,16 @@ class bioTag_SapBERT:
             )
         else:
             self.index = faiss.read_index(str(model_files["index"]))
-
-        self.index_to_id = json.load(open(model_files["index_to_id"], "r"))
-        self.index_to_term = json.load(open(model_files["index_to_term"], "r"))
-        self.id_to_concept = json.load(open(model_files["id_to_concept"], "r"))
-        self.firstword_to_id = json.load(open(model_files["firstword_to_id"], "r"))
-        self.abbr = json.load(open(model_files["abbr"], "r"))
+        with open(model_files["index_to_id"], "r") as f:
+            self.index_to_id = json.load(f)
+        with open(model_files["index_to_term"], "r") as f:
+            self.index_to_term = json.load(f)
+        with open(model_files["id_to_concept"], "r") as f:
+            self.id_to_concept = json.load(f)
+        with open(model_files["firstword_to_id"], "r") as f:
+            self.firstword_to_id = json.load(f)
+        with open(model_files["abbr"], "r") as f:
+            self.abbr = json.load(f)
         self.llm_range = (tau_2, tau_1)
         self.k = k
         self.use_cache = use_cache
@@ -157,15 +161,15 @@ class bioTag_SapBERT:
             return {}
         embs = self.encode(x).astype("float32")
         faiss.normalize_L2(embs)
-        D, I = self.index.search(embs, Top_N)
+        neighbor_distance, nearst_neighbor = self.index.search(embs, Top_N)
         concepts = {}
         for i in range(len(x)):
             concepts[i] = [
                 (
-                    self.get_concept(str(I[i][j])),
-                    self.index_to_id[str(I[i][j])],
-                    float(D[i][j]),
-                    str(I[i][j]),
+                    self.get_concept(str(nearst_neighbor[i][j])),
+                    self.index_to_id[str(nearst_neighbor[i][j])],
+                    float(neighbor_distance[i][j]),
+                    str(nearst_neighbor[i][j]),
                 )
                 for j in range(Top_N)
             ]
@@ -185,7 +189,7 @@ class bioTag_SapBERT:
         # 1. 扩大搜索范围 (Search Buffer)，防止前几个全是同一个ID
         # 比如你要 Top 3，我就搜 50 个回来挑
         Search_Buffer = max(100, Top_N * 10)
-        D, I = self.index.search(embs, Search_Buffer)
+        neighbor_distance, nearest_neighbor = self.index.search(embs, Search_Buffer)
         # ^ D: Distances to Nearest Neighbors, Shape: (num_queries, k)
         # I: Indices of Nearest Neighbors, Shape: (num_queries, k)
         # I is always sorted by increasing distance (best match first)
@@ -197,7 +201,7 @@ class bioTag_SapBERT:
 
             # 遍历 Buffer 里的结果
             for j in range(Search_Buffer):
-                faiss_idx = str(I[i][j])
+                faiss_idx = str(nearest_neighbor[i][j])
                 # 获取 Concept ID
                 c_id = self.index_to_id[faiss_idx]
 
@@ -206,7 +210,7 @@ class bioTag_SapBERT:
                     seen_ids.add(c_id)  # seen_ids do not follow best match first order
 
                     # 组装结果
-                    score = float(D[i][j])
+                    score = float(neighbor_distance[i][j])
                     concept_detail = self.get_concept(faiss_idx)
                     unique_candidates.append(
                         (concept_detail, c_id, score, faiss_idx)
@@ -246,7 +250,7 @@ class bioTag_SapBERT:
             # if ' ' not in x[i]:
             #     continue
             if " " not in x[i]:
-                # TODO: x[i] may be plural
+                # TODO(Yicheng Tao): x[i] may be plural
                 if id := self.abbr.get(x[i].lower(), ""):
                     concepts[i] = [
                         (self.id_to_concept[id.replace(":", "_")], id, 1.0)
