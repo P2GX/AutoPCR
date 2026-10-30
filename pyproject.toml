@@ -5,15 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "autopcr"
 dynamic = ["version"]
-description = "AutoPCR"
+description = "A wrapper around Yicheng Tao's AutoPCR algorithm."
 authors = [{ name = "Rouven Reuter" }]
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 readme = "README.md"
 
-# Core: everything needed for LLMClient (OpenAI-compatible endpoint) + FAISS retrieval.
-# Heavy ML stacks (torch, onnxruntime) live in extras so a plain install stays small.
 dependencies = [
     "nltk>=3.5",
     "numpy>=2.1",
@@ -32,15 +30,12 @@ abbreviations = ["scispacy>=0.6"]
 
 [project.urls]
 homepage = "https://www.smart-monkey.blog/"
-repository = "https://github.com/P2GX/RAG-HPO"
-documentation = "https://github.com/P2GX/RAG-HPO"
-bugtracker = "https://github.com/P2GX/RAG-HPO/issues"
+repository = "https://github.com/SmartMonkey-git/AutoPCR"
+documentation = "https://github.com/SmartMonkey-git/AutoPCR"
+bugtracker = "https://github.com/SmartMonkey-git/AutoPCR/issues"
 
 [tool.setuptools]
 packages.find = { where = ["src"] }
-
-[tool.setuptools.package-data]
-rag_hpo = ["data/*.csv"]
 
 [tool.setuptools_scm]
 version_file = "src/autopcr/_version.py"
